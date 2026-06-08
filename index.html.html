@@ -697,6 +697,9 @@ async function carregar(){
   await Promise.all([loadClientes(),loadPontuais(),loadFixas(),loadVariaveis(),loadTerceiros(),loadHistorico()]);
   await loadClientesAno();
   await garantirMes();
+  // Restaura aba ativa salva no localStorage (persiste entre refreshes)
+  const _savedTab=localStorage.getItem('mp_active_tab');
+  if(_savedTab)goTab(_savedTab);
   renderTudo();
 }
 
@@ -1680,7 +1683,10 @@ async function salvarModal(){
       // meta-label removido do topbar — sem referência necessária
       closeModal();renderTudo();btn.textContent='Salvar';return;
     }
+    const _tipoSalvo=modalTipo;
     closeModal();await carregar();
+    // Após salvar cliente, vai pro MMR para mostrar o resultado imediatamente
+    if(_tipoSalvo==='cliente'||_tipoSalvo==='editar-cliente')goTab('mmr');
   }catch(e){alert('Erro: '+e.message);}
   btn.textContent='Salvar';
 }
@@ -1735,6 +1741,7 @@ async function navMes(n){mesRef=addMes(mesRef,n);await carregar();}
 function goTab(id){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+id));
+  localStorage.setItem('mp_active_tab',id);
 }
 
 // SETTINGS
