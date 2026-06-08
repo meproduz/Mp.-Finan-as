@@ -1597,19 +1597,28 @@ async function salvarModal(){
       const videos=parseInt(document.getElementById('m-videos').value)||1;
       const duracao=parseInt(document.getElementById('m-duracao').value)||null;
       const inicio=document.getElementById('m-inicio').value||mesRef;
-      const{data:cl}=await supa.from('fin_clientes').insert({
+      // 1. Insere o cliente base — usa .select() (não .single()) para evitar crash em null
+      const{data:clArr,error:clErr}=await supa.from('fin_clientes').insert({
         nome,plano,valor_padrao:valor,dia_vencimento:dia,ativo_padrao:true,
         videos_mes:videos,duracao_meses:duracao||null,data_inicio:inicio
-      }).select().single();
-      // Popula todos os meses do contrato
-      const qtd=duracao||1;
+      }).select();
+      if(clErr)throw new Error('Erro ao criar cliente: '+clErr.message);
+      const cl=clArr?.[0];
+      if(!cl)throw new Error('Cliente não retornado após inserção. Verifique as permissões do Supabase (RLS).');
+      // 2. Cria registros mensais — insert simples (ID novo = sem conflito possível)
+      const mesesSet=new Set();
       const inserts=[];
+      const qtd=duracao||1;
       for(let i=0;i<qtd;i++){
         const m=addMes(inicio,i);
-        inserts.push({cliente_id:cl.id,mes_ref:m,ativo:true,valor,status:'pendente'});
+        if(!mesesSet.has(m)){mesesSet.add(m);inserts.push({cliente_id:cl.id,mes_ref:m,ativo:true,valor,status:'pendente'});}
       }
-      // Upsert em lote
-      await supa.from('fin_mes_clientes').upsert(inserts,{onConflict:'cliente_id,mes_ref'});
+      // Garante que o mês navegado SEMPRE tem registro (cliente aparece no MMR imediatamente)
+      if(!mesesSet.has(mesRef)){
+        inserts.push({cliente_id:cl.id,mes_ref:mesRef,ativo:true,valor,status:'pendente'});
+      }
+      const{error:mcErr}=await supa.from('fin_mes_clientes').insert(inserts);
+      if(mcErr)throw new Error('Erro ao criar meses do cliente: '+mcErr.message);
     }else if(modalTipo==='pontual'){
       const desc=document.getElementById('m-desc').value.trim();
       const val=parseFloat(document.getElementById('m-valor').value)||0;
