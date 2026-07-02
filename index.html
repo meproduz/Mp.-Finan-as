@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Me. Financeiro</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
@@ -19,21 +19,21 @@
 :root{
   --bg:#060608;--bg1:#0C0C10;--bg2:#101014;--bg3:#141418;--bg4:#1A1A1F;--bg5:#202028;
   --border:#18181F;--border2:#222230;
-  --accent:#C8D400;--a2:#9EA800;--a-dim:rgba(200,212,0,0.06);--a-border:rgba(200,212,0,0.15);
+  --accent:#CF910F;--a2:#B37B0D;--a-dim:rgba(207,145,15,0.07);--a-border:rgba(207,145,15,0.22);
   --red:#FF4D4D;--red-dim:rgba(255,77,77,0.06);--red-border:rgba(255,77,77,0.2);
   --green:#00E87A;--green-dim:rgba(0,232,122,0.06);
   --yellow:#FFB800;--blue:#4D9FFF;--purple:#A78BFA;
   --text:#F0F0FF;--text2:#44445A;--text3:#2A2A35;
 }
-html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;-webkit-font-smoothing:antialiased;}
-input,select,textarea,button{font-family:'Poppins',sans-serif;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Comfortaa','Poppins',sans-serif;-webkit-font-smoothing:antialiased;}
+input,select,textarea,button{font-family:'Comfortaa','Poppins',sans-serif;}
 ::-webkit-scrollbar{width:7px;height:7px;}
 ::-webkit-scrollbar-track{background:rgba(255,255,255,0.02);border-radius:4px;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 ::-webkit-scrollbar-thumb:hover{background:#33334A;}
 
 /* LOGIN */
-.login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 50%,rgba(200,212,0,0.04) 0%,transparent 60%);}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 50%,rgba(207,145,15,0.06) 0%,transparent 60%);}
 .login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:40px;width:100%;max-width:340px;}
 .login-logo{margin-bottom:32px;display:flex;flex-direction:column;gap:2px;}
 .logo-badge{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:var(--accent);border-radius:12px;font-size:15px;font-weight:900;color:#060608;letter-spacing:-1px;margin-bottom:12px;}
@@ -482,6 +482,7 @@ input,select,textarea,button{font-family:'Poppins',sans-serif;}
     <button class="tab" data-tab="fluxo" onclick="goTab('fluxo')">Fluxo de Caixa</button>
     <button class="tab" data-tab="despesas" onclick="goTab('despesas')">Despesas</button>
     <button class="tab" data-tab="resumo" onclick="goTab('resumo')">Resumo</button>
+    <button class="tab" data-tab="calc" onclick="goTab('calc')">Calculadora</button>
     <button class="tab" data-tab="config" onclick="goTab('config')">⚙ Config</button>
   </div>
 
@@ -656,6 +657,190 @@ input,select,textarea,button{font-family:'Poppins',sans-serif;}
       </div>
     </div>
 
+    <!-- CALCULADORA DE PRECIFICAÇÃO -->
+    <div class="page" id="page-calc">
+      <style>
+        .cl-wrap{max-width:860px;margin:0 auto;padding:24px 16px 80px;}
+        .cl-sec{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+        .cl-sec-header{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border2);transition:background .12s;}
+        .cl-sec-header:hover{background:var(--bg3);}
+        .cl-sec-num{width:24px;height:24px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#060608;flex-shrink:0;}
+        .cl-sec-title{font-size:12px;font-weight:700;color:var(--text);flex:1;}
+        .cl-sec-arrow{font-size:10px;color:var(--text2);transition:transform .2s;}
+        .cl-sec.open .cl-sec-arrow{transform:rotate(180deg);}
+        .cl-sec-body{padding:16px 18px;display:none;}
+        .cl-sec.open .cl-sec-body{display:block;}
+        .cl-field{margin-bottom:14px;}.cl-field:last-child{margin-bottom:0;}
+        .cl-field label{display:block;font-size:10px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+        .cl-field input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:inherit;font-size:14px;padding:10px 12px;outline:none;transition:border-color .2s;}
+        .cl-field input[type=number]:focus{border-color:var(--a-border);}
+        .cl-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+        @media(max-width:480px){.cl-row2{grid-template-columns:1fr;}}
+        .cl-srow{display:flex;align-items:center;gap:10px;}
+        .cl-srow input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--border2);border-radius:4px;outline:none;}
+        .cl-srow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border-radius:50%;cursor:pointer;}
+        .cl-sval{font-size:14px;font-weight:700;color:var(--accent);min-width:36px;text-align:right;}
+        .cl-div{height:1px;background:var(--border2);margin:14px 0;}
+        .cl-btn{width:100%;background:var(--accent);color:#060608;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:12px;letter-spacing:.3px;transition:all .2s;}
+        .cl-btn:hover{background:var(--a2);transform:translateY(-1px);}
+        #cl-resultado{display:none;}
+        .cl-res-sec{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:18px;margin-bottom:12px;}
+        .cl-res-title{font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+        .cl-res-title::after{content:'';flex:1;height:1px;background:var(--border2);}
+        .cl-pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+        @media(max-width:460px){.cl-pgrid{grid-template-columns:1fr;}}
+        .cl-pbox{border-radius:10px;padding:16px 12px;text-align:center;border:1px solid var(--border2);background:var(--bg3);}
+        .cl-pbox.rec{background:var(--accent);border-color:var(--accent);}
+        .cl-plbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:6px;}
+        .cl-pbox.rec .cl-plbl{color:rgba(0,0,0,.55);}
+        .cl-pval{font-size:20px;font-weight:700;color:var(--text);}
+        .cl-pbox.rec .cl-pval{color:#060608;}
+        .cl-pdesc{font-size:8px;color:var(--text3);margin-top:3px;}
+        .cl-pbox.rec .cl-pdesc{color:rgba(0,0,0,.45);}
+        .cl-bdown{background:var(--bg3);border-radius:10px;padding:14px;border:1px solid var(--border2);}
+        .cl-brow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+        .cl-brow:last-child{border-bottom:none;}
+        .cl-brow .cl-bl{color:var(--text2);}.cl-brow .cl-bv{font-weight:700;color:var(--text);}
+        .cl-brow.cl-btotal .cl-bl{color:var(--accent);font-weight:700;font-size:12px;}
+        .cl-brow.cl-btotal .cl-bv{color:var(--accent);font-size:13px;}
+        .cl-mbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:12px;}
+        .cl-mbadge.ok{background:var(--green-dim);color:var(--green);border:1px solid var(--green);}
+        .cl-mbadge.warn{background:rgba(255,140,0,.1);color:#FF8C00;border:1px solid #FF8C00;}
+        .cl-mbadge.bad{background:var(--red-dim);color:var(--red);border:1px solid var(--red);}
+        .cl-alerta{font-size:10px;color:var(--text2);background:var(--bg3);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 12px;line-height:1.7;margin-top:12px;}
+        .cl-planos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px;}
+        @media(max-width:460px){.cl-planos{grid-template-columns:1fr;}}
+        .cl-plano{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px;}
+        .cl-pnome{font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+        .cl-plinha{font-size:9px;color:var(--text2);margin-bottom:2px;}
+        .cl-ppreco{font-size:15px;font-weight:700;color:var(--text);margin-top:8px;}
+        .cl-page-title{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;padding:20px 20px 4px;}
+      </style>
+
+      <div class="cl-page-title">Calculadora de Precificação</div>
+      <div class="cl-wrap">
+
+        <div class="cl-sec open" id="cls1">
+          <div class="cl-sec-header" onclick="clToggle('cls1')">
+            <div class="cl-sec-num">1</div>
+            <div class="cl-sec-title">O Projeto</div>
+            <div class="cl-sec-arrow">▼</div>
+          </div>
+          <div class="cl-sec-body">
+            <div class="cl-row2">
+              <div class="cl-field">
+                <label>Vídeos completos</label>
+                <div class="cl-srow">
+                  <input type="range" id="cl-qtd-v" min="1" max="12" value="4" oninput="clSv('cl-qtd-v','cl-d-v')">
+                  <div class="cl-sval" id="cl-d-v">4</div>
+                </div>
+              </div>
+              <div class="cl-field">
+                <label>Cortes / reaproveitamentos</label>
+                <div class="cl-srow">
+                  <input type="range" id="cl-qtd-c" min="0" max="8" value="2" oninput="clSv('cl-qtd-c','cl-d-c')">
+                  <div class="cl-sval" id="cl-d-c">2</div>
+                </div>
+              </div>
+            </div>
+            <div class="cl-field">
+              <label>Dias de captação</label>
+              <div class="cl-srow">
+                <input type="range" id="cl-dias" min="1" max="4" value="1" oninput="clSv('cl-dias','cl-d-dias')">
+                <div class="cl-sval" id="cl-d-dias">1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cl-sec open" id="cls2">
+          <div class="cl-sec-header" onclick="clToggle('cls2')">
+            <div class="cl-sec-num">2</div>
+            <div class="cl-sec-title">Equipe</div>
+            <div class="cl-sec-arrow">▼</div>
+          </div>
+          <div class="cl-sec-body">
+            <div class="cl-row2">
+              <div class="cl-field"><label>Horas captação — Videomaker</label><input type="number" id="cl-h-vm" value="5.5" step="0.5" min="1"></div>
+              <div class="cl-field"><label>Horas captação — Dir. Criativa</label><input type="number" id="cl-h-dc-cap" value="5.5" step="0.5" min="1"></div>
+            </div>
+            <div class="cl-row2">
+              <div class="cl-field"><label>Horas roteirização</label><input type="number" id="cl-h-rot" value="2" step="0.5" min="0"></div>
+              <div class="cl-field"><label>Horas planejamento — Dir. Criativa</label><input type="number" id="cl-h-dc-plan" value="5" step="0.5" min="1"></div>
+            </div>
+            <div class="cl-field"><label>CPH da equipe (R$/h)</label><input type="number" id="cl-cph" value="35" step="1" min="20"></div>
+            <div class="cl-field">
+              <label>Margem desejada (%)</label>
+              <div class="cl-srow">
+                <input type="range" id="cl-margem" min="30" max="85" value="60" oninput="clSv('cl-margem','cl-d-margem',true)">
+                <div class="cl-sval" id="cl-d-margem">60%</div>
+              </div>
+            </div>
+            <div class="cl-div"></div>
+            <div class="cl-row2">
+              <div class="cl-field"><label>Edição por vídeo — Editor (R$)</label><input type="number" id="cl-c-vid" value="40" step="5" min="0"></div>
+              <div class="cl-field"><label>Edição por corte — Editor (R$)</label><input type="number" id="cl-c-cor" value="20" step="5" min="0"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cl-sec" id="cls3">
+          <div class="cl-sec-header" onclick="clToggle('cls3')">
+            <div class="cl-sec-num">3</div>
+            <div class="cl-sec-title">Deslocamento</div>
+            <div class="cl-sec-arrow">▼</div>
+          </div>
+          <div class="cl-sec-body">
+            <div class="cl-row2">
+              <div class="cl-field"><label>Distância — só ida (km)</label><input type="number" id="cl-km" value="0" step="5" min="0"></div>
+              <div class="cl-field"><label>Pedágios ida e volta (R$)</label><input type="number" id="cl-pedagio" value="0" step="5" min="0"></div>
+            </div>
+            <div class="cl-row2">
+              <div class="cl-field"><label>Preço combustível (R$/litro)</label><input type="number" id="cl-litro" value="6.20" step="0.10" min="0"></div>
+              <div class="cl-field"><label>Consumo do veículo (km/litro)</label><input type="number" id="cl-consumo" value="12" step="0.5" min="1"></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="cl-btn" onclick="clCalcular()">Calcular Preço</button>
+
+        <div id="cl-resultado">
+          <div class="cl-res-sec">
+            <div class="cl-res-title">Preços sugeridos</div>
+            <div class="cl-pgrid">
+              <div class="cl-pbox"><div class="cl-plbl">Mínimo</div><div class="cl-pval" id="cl-p-min">—</div><div class="cl-pdesc">Margem 30%</div></div>
+              <div class="cl-pbox rec"><div class="cl-plbl">⭐ Recomendado</div><div class="cl-pval" id="cl-p-rec">—</div><div class="cl-pdesc">Margem alvo</div></div>
+              <div class="cl-pbox"><div class="cl-plbl">Premium</div><div class="cl-pval" id="cl-p-prem">—</div><div class="cl-pdesc">Ticket alto</div></div>
+            </div>
+            <div id="cl-mbadge"></div>
+            <div class="cl-alerta" id="cl-alerta-min"></div>
+          </div>
+          <div class="cl-res-sec">
+            <div class="cl-res-title">Composição de Custos</div>
+            <div class="cl-bdown">
+              <div class="cl-brow"><span class="cl-bl">Captação — Videomaker</span><span class="cl-bv" id="cl-b-vm">—</span></div>
+              <div class="cl-brow"><span class="cl-bl">Captação — Dir. Criativa</span><span class="cl-bv" id="cl-b-dc-cap">—</span></div>
+              <div class="cl-brow"><span class="cl-bl">Roteirização</span><span class="cl-bv" id="cl-b-rot">—</span></div>
+              <div class="cl-brow"><span class="cl-bl">Planejamento — Dir. Criativa</span><span class="cl-bv" id="cl-b-dc-plan">—</span></div>
+              <div class="cl-brow"><span class="cl-bl">Edição — Editor</span><span class="cl-bv" id="cl-b-ed">—</span></div>
+              <div class="cl-brow"><span class="cl-bl">Deslocamento</span><span class="cl-bv" id="cl-b-desloc">—</span></div>
+              <div class="cl-brow cl-btotal"><span class="cl-bl">Custo total</span><span class="cl-bv" id="cl-b-total">—</span></div>
+            </div>
+          </div>
+          <div class="cl-res-sec">
+            <div class="cl-res-title">Referência — Planos Me.Produz</div>
+            <div class="cl-planos">
+              <div class="cl-plano"><div class="cl-pnome">Alicerce</div><div class="cl-plinha">4 vídeos + 2 cortes = 6 peças</div><div class="cl-plinha">VM: 5,5h | DC: 5,5h + 5h plan</div><div class="cl-ppreco">R$ 1.799,99</div></div>
+              <div class="cl-plano"><div class="cl-pnome">Tração</div><div class="cl-plinha">6 vídeos + 3 cortes = 9 peças</div><div class="cl-plinha">VM: 6h | DC: 6h + 7h plan</div><div class="cl-ppreco">R$ 2.499,99</div></div>
+              <div class="cl-plano"><div class="cl-pnome">Expansão</div><div class="cl-plinha">8 vídeos + 4 cortes = 12 peças</div><div class="cl-plinha">VM: 6h | DC: 6h + 8h plan</div><div class="cl-ppreco">R$ 3.499,99</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- FIM CALCULADORA -->
+
     <!-- RESUMO -->
     <div class="page" id="page-resumo">
       <div class="sec">
@@ -764,6 +949,51 @@ async function doLogin(){
   }catch(e2){err.textContent='Erro de conexão: '+e2.message;btn.textContent='Entrar';}
 }
 async function doLogout(){await supa.auth.signOut();location.reload();}
+
+// ── CALCULADORA DE PRECIFICAÇÃO ────────────────────────────────────
+function clToggle(id){document.getElementById(id).classList.toggle('open');}
+function clSv(id,did,pct){const v=document.getElementById(id).value;document.getElementById(did).textContent=pct?v+'%':v;}
+function clFmt(v){return'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function clArr(v){if(v<1000)return Math.ceil(v/50)*50-0.01;if(v<3000)return Math.ceil(v/100)*100-0.01;return Math.ceil(v/200)*200-0.01;}
+function clCalcular(){
+  const g=id=>parseFloat(document.getElementById(id).value)||0;
+  const gi=id=>parseInt(document.getElementById(id).value)||0;
+  const qtdV=gi('cl-qtd-v'),qtdC=gi('cl-qtd-c'),dias=gi('cl-dias');
+  const hVm=g('cl-h-vm')||5.5,hDcCap=g('cl-h-dc-cap')||5.5,hRot=g('cl-h-rot'),hDcPlan=g('cl-h-dc-plan')||5;
+  const cph=g('cl-cph')||35,cVid=g('cl-c-vid')||40,cCor=g('cl-c-cor')||20;
+  const km=g('cl-km'),pedagio=g('cl-pedagio'),litro=g('cl-litro')||6.2,consumo=g('cl-consumo')||12;
+  const custoVm=hVm*dias*cph,custoDcCap=hDcCap*dias*cph,custoRot=hRot*cph,custoDcPlan=hDcPlan*cph;
+  const custoEd=(qtdV*cVid)+(qtdC*cCor);
+  const desloc=(km*2/consumo)*litro+pedagio;
+  const total=custoVm+custoDcCap+custoRot+custoDcPlan+custoEd+desloc;
+  const margemAlvo=parseInt(document.getElementById('cl-margem').value)/100;
+  const pMin=clArr(total/0.70),pRec=clArr(total/(1-margemAlvo)),pPrem=clArr(pRec*1.30);
+  const margemReal=(pRec-total)/pRec*100;
+  document.getElementById('cl-p-min').textContent=clFmt(pMin);
+  document.getElementById('cl-p-rec').textContent=clFmt(pRec);
+  document.getElementById('cl-p-prem').textContent=clFmt(pPrem);
+  document.getElementById('cl-b-vm').textContent=clFmt(custoVm);
+  document.getElementById('cl-b-dc-cap').textContent=clFmt(custoDcCap);
+  document.getElementById('cl-b-rot').textContent=clFmt(custoRot);
+  document.getElementById('cl-b-dc-plan').textContent=clFmt(custoDcPlan);
+  document.getElementById('cl-b-ed').textContent=clFmt(custoEd);
+  document.getElementById('cl-b-desloc').textContent=clFmt(desloc);
+  document.getElementById('cl-b-total').textContent=clFmt(total);
+  const badge=document.getElementById('cl-mbadge');
+  const alvo=margemAlvo*100;
+  if(margemReal>=alvo-2)badge.innerHTML='<div class="cl-mbadge ok">✓ Margem '+margemReal.toFixed(0)+'% — dentro do alvo</div>';
+  else if(margemReal>=alvo-15)badge.innerHTML='<div class="cl-mbadge warn">⚠ Margem '+margemReal.toFixed(0)+'% — abaixo do alvo de '+alvo.toFixed(0)+'%</div>';
+  else badge.innerHTML='<div class="cl-mbadge bad">✕ Margem '+margemReal.toFixed(0)+'% — muito abaixo do alvo</div>';
+  const avisos=[];
+  if(km>80)avisos.push('Deslocamento longo ('+(km*2)+'km) — verifique hospedagem.');
+  if((qtdV+qtdC)>=10)avisos.push('Volume alto — considere propor contrato mensal.');
+  avisos.push('Não caia abaixo de '+clFmt(pMin)+'.');
+  document.getElementById('cl-alerta-min').textContent=avisos.join(' ');
+  const res=document.getElementById('cl-resultado');
+  res.style.display='block';
+  res.scrollIntoView({behavior:'smooth',block:'start'});
+}
+// ── FIM CALCULADORA ────────────────────────────────────────────────
 
 // CARREGAR
 async function carregar(){
