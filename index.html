@@ -660,61 +660,78 @@ input,select,textarea,button{font-family:'Comfortaa','Poppins',sans-serif;}
     <!-- CALCULADORA DE PRECIFICAÇÃO -->
     <div class="page" id="page-calc">
       <style>
-        .cl-wrap{max-width:860px;margin:0 auto;padding:24px 16px 80px;}
-        .cl-sec{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;margin-bottom:12px;overflow:hidden;}
-        .cl-sec-header{padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border2);transition:background .12s;}
+        /* ── HIERARQUIA TIPOGRÁFICA DA CALCULADORA ── */
+        /* Nível 1 — Título da página: accent, uppercase, rastreado */
+        .cl-page-title{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;padding:24px 20px 0;opacity:.85;}
+
+        /* Nível 2 — Títulos de seção: branco total, pesado */
+        .cl-sec-title{font-size:15px;font-weight:800;color:var(--text);flex:1;letter-spacing:-.3px;}
+
+        /* Nível 3 — Labels de campo: branco médio, uppercase pequeno */
+        .cl-field label{display:block;font-size:10px;color:rgba(240,240,255,0.52);margin-bottom:7px;font-weight:700;text-transform:uppercase;letter-spacing:.55px;}
+
+        /* Nível 4 — Valores de input: branco, peso normal */
+        .cl-field input[type=number]{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--text);font-family:inherit;font-size:15px;font-weight:500;padding:11px 13px;outline:none;transition:border-color .2s,background .2s;}
+        .cl-field input[type=number]:focus{border-color:var(--a-border);background:rgba(207,145,15,0.05);}
+
+        /* Nível 5 — Valores de slider: accent, grande e bold */
+        .cl-sval{font-size:18px;font-weight:800;color:var(--accent);min-width:44px;text-align:right;letter-spacing:-.5px;}
+        .cl-srow input[type=range]{flex:1;-webkit-appearance:none;height:4px;background:rgba(255,255,255,0.1);border-radius:4px;outline:none;}
+        .cl-srow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 0 8px rgba(207,145,15,0.4);}
+
+        /* Layout */
+        .cl-wrap{max-width:860px;margin:0 auto;padding:16px 16px 80px;}
+        .cl-sec{background:var(--bg2);border:1px solid rgba(255,255,255,0.07);border-radius:16px;margin-bottom:10px;overflow:hidden;}
+        .cl-sec-header{padding:16px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;border-bottom:1px solid rgba(255,255,255,0.06);transition:background .12s;}
         .cl-sec-header:hover{background:var(--bg3);}
-        .cl-sec-num{width:24px;height:24px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#060608;flex-shrink:0;}
-        .cl-sec-title{font-size:12px;font-weight:700;color:var(--text);flex:1;}
-        .cl-sec-arrow{font-size:10px;color:var(--text2);transition:transform .2s;}
+        .cl-sec-num{width:28px;height:28px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#060608;flex-shrink:0;}
+        .cl-sec-arrow{font-size:11px;color:rgba(240,240,255,0.3);transition:transform .2s;}
         .cl-sec.open .cl-sec-arrow{transform:rotate(180deg);}
-        .cl-sec-body{padding:16px 18px;display:none;}
+        .cl-sec-body{padding:20px;display:none;}
         .cl-sec.open .cl-sec-body{display:block;}
-        .cl-field{margin-bottom:14px;}.cl-field:last-child{margin-bottom:0;}
-        .cl-field label{display:block;font-size:10px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
-        .cl-field input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:inherit;font-size:14px;padding:10px 12px;outline:none;transition:border-color .2s;}
-        .cl-field input[type=number]:focus{border-color:var(--a-border);}
+        .cl-field{margin-bottom:16px;}.cl-field:last-child{margin-bottom:0;}
         .cl-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
         @media(max-width:480px){.cl-row2{grid-template-columns:1fr;}}
-        .cl-srow{display:flex;align-items:center;gap:10px;}
-        .cl-srow input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--border2);border-radius:4px;outline:none;}
-        .cl-srow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border-radius:50%;cursor:pointer;}
-        .cl-sval{font-size:14px;font-weight:700;color:var(--accent);min-width:36px;text-align:right;}
-        .cl-div{height:1px;background:var(--border2);margin:14px 0;}
-        .cl-btn{width:100%;background:var(--accent);color:#060608;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;padding:15px;cursor:pointer;margin-bottom:12px;letter-spacing:.3px;transition:all .2s;}
-        .cl-btn:hover{background:var(--a2);transform:translateY(-1px);}
+        .cl-srow{display:flex;align-items:center;gap:12px;}
+        .cl-div{height:1px;background:rgba(255,255,255,0.07);margin:16px 0;}
+
+        /* CTA */
+        .cl-btn{width:100%;background:var(--accent);color:#060608;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:800;padding:16px;cursor:pointer;margin-bottom:12px;letter-spacing:.4px;transition:all .2s;text-transform:uppercase;}
+        .cl-btn:hover{background:var(--a2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(207,145,15,0.3);}
+
+        /* Resultados */
         #cl-resultado{display:none;}
-        .cl-res-sec{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:18px;margin-bottom:12px;}
-        .cl-res-title{font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-        .cl-res-title::after{content:'';flex:1;height:1px;background:var(--border2);}
+        .cl-res-sec{background:var(--bg2);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:20px;margin-bottom:10px;}
+        .cl-res-title{font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+        .cl-res-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
         .cl-pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
         @media(max-width:460px){.cl-pgrid{grid-template-columns:1fr;}}
-        .cl-pbox{border-radius:10px;padding:16px 12px;text-align:center;border:1px solid var(--border2);background:var(--bg3);}
-        .cl-pbox.rec{background:var(--accent);border-color:var(--accent);}
-        .cl-plbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:6px;}
-        .cl-pbox.rec .cl-plbl{color:rgba(0,0,0,.55);}
-        .cl-pval{font-size:20px;font-weight:700;color:var(--text);}
+        .cl-pbox{border-radius:12px;padding:18px 14px;text-align:center;border:1px solid rgba(255,255,255,0.08);background:var(--bg3);}
+        .cl-pbox.rec{background:var(--accent);border-color:var(--accent);box-shadow:0 8px 28px rgba(207,145,15,0.25);}
+        .cl-plbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(240,240,255,0.45);margin-bottom:8px;}
+        .cl-pbox.rec .cl-plbl{color:rgba(0,0,0,.5);}
+        .cl-pval{font-size:22px;font-weight:900;color:var(--text);letter-spacing:-.5px;}
         .cl-pbox.rec .cl-pval{color:#060608;}
-        .cl-pdesc{font-size:8px;color:var(--text3);margin-top:3px;}
-        .cl-pbox.rec .cl-pdesc{color:rgba(0,0,0,.45);}
-        .cl-bdown{background:var(--bg3);border-radius:10px;padding:14px;border:1px solid var(--border2);}
-        .cl-brow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+        .cl-pdesc{font-size:9px;color:rgba(240,240,255,0.3);margin-top:4px;font-style:italic;}
+        .cl-pbox.rec .cl-pdesc{color:rgba(0,0,0,.4);}
+        .cl-bdown{background:rgba(255,255,255,0.03);border-radius:10px;padding:14px;border:1px solid rgba(255,255,255,0.07);}
+        .cl-brow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;}
         .cl-brow:last-child{border-bottom:none;}
-        .cl-brow .cl-bl{color:var(--text2);}.cl-brow .cl-bv{font-weight:700;color:var(--text);}
-        .cl-brow.cl-btotal .cl-bl{color:var(--accent);font-weight:700;font-size:12px;}
-        .cl-brow.cl-btotal .cl-bv{color:var(--accent);font-size:13px;}
-        .cl-mbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:12px;}
+        .cl-brow .cl-bl{color:rgba(240,240,255,0.5);font-style:italic;}
+        .cl-brow .cl-bv{font-weight:700;color:var(--text);}
+        .cl-brow.cl-btotal .cl-bl{color:var(--accent);font-weight:800;font-size:13px;font-style:normal;}
+        .cl-brow.cl-btotal .cl-bv{color:var(--accent);font-size:14px;font-weight:900;}
+        .cl-mbadge{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:12px;}
         .cl-mbadge.ok{background:var(--green-dim);color:var(--green);border:1px solid var(--green);}
         .cl-mbadge.warn{background:rgba(255,140,0,.1);color:#FF8C00;border:1px solid #FF8C00;}
         .cl-mbadge.bad{background:var(--red-dim);color:var(--red);border:1px solid var(--red);}
-        .cl-alerta{font-size:10px;color:var(--text2);background:var(--bg3);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 12px;line-height:1.7;margin-top:12px;}
+        .cl-alerta{font-size:11px;color:rgba(240,240,255,0.6);background:rgba(255,255,255,0.03);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:11px 14px;line-height:1.8;margin-top:12px;font-style:italic;}
         .cl-planos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px;}
         @media(max-width:460px){.cl-planos{grid-template-columns:1fr;}}
-        .cl-plano{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px;}
-        .cl-pnome{font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
-        .cl-plinha{font-size:9px;color:var(--text2);margin-bottom:2px;}
-        .cl-ppreco{font-size:15px;font-weight:700;color:var(--text);margin-top:8px;}
-        .cl-page-title{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;padding:20px 20px 4px;}
+        .cl-plano{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;}
+        .cl-pnome{font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+        .cl-plinha{font-size:10px;color:rgba(240,240,255,0.45);margin-bottom:3px;font-style:italic;}
+        .cl-ppreco{font-size:17px;font-weight:900;color:var(--text);margin-top:10px;letter-spacing:-.3px;}
       </style>
 
       <div class="cl-page-title">Calculadora de Precificação</div>
