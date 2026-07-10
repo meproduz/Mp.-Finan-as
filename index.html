@@ -133,20 +133,37 @@ input,select,textarea,button{font-family:'Poppins',sans-serif;}
 .hero{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
 @media(min-width:700px){.hero{grid-template-columns:repeat(4,1fr);}}
 @media(min-width:700px){#hero-desp{grid-template-columns:repeat(5,1fr);}}
-.hero-kpi{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s,transform .18s,box-shadow .2s;cursor:default;}
-.hero-kpi:hover{border-color:rgba(207,145,15,0.28);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.35),0 0 0 1px rgba(207,145,15,0.1);}
-.hero-kpi::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(207,145,15,0.06),transparent 70%);pointer-events:none;transition:opacity .25s;}
-.hero-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(207,145,15,0.35),transparent);opacity:0;transition:opacity .25s;}
+.hero-kpi{border:1px solid var(--border2);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s,transform .18s,box-shadow .2s;cursor:default;background:linear-gradient(135deg,#161616,#121212);}
+.hero-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.4);}
+.hero-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;opacity:0;transition:opacity .25s;}
 .hero-kpi:hover::after{opacity:1;}
-.hero-kpi.red-kpi::before{background:radial-gradient(ellipse at top right,rgba(255,77,77,0.06),transparent 70%);}
-.hero-kpi.red-kpi:hover{border-color:rgba(255,77,77,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.3),0 0 0 1px rgba(255,77,77,0.1);}
-.hero-kpi.red-kpi::after{background:linear-gradient(90deg,transparent,rgba(255,77,77,0.4),transparent);}
-.hero-kpi.green-kpi::before{background:radial-gradient(ellipse at top right,rgba(0,232,122,0.05),transparent 70%);}
-.hk-lbl{font-size:10px;font-weight:500;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
-.hk-val{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1;white-space:nowrap;}
-@media(min-width:700px){.hk-val{font-size:30px;}}
-@media(min-width:700px){#hero-desp .hk-val{font-size:24px;letter-spacing:-.3px;}}
-.hk-sub{font-size:11px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.35);margin-top:8px;}
+/* Card colorido por tipo — idêntico ao CRM */
+.hero-kpi.accent-kpi{background:linear-gradient(135deg,#1a1200,#120e00);border-color:rgba(207,145,15,0.15);}
+.hero-kpi.accent-kpi:hover{border-color:rgba(207,145,15,0.3);}
+.hero-kpi.accent-kpi::after{background:linear-gradient(90deg,transparent,rgba(207,145,15,0.4),transparent);}
+.hero-kpi.green-kpi{background:linear-gradient(135deg,#0a1e12,#0d2416);border-color:rgba(34,197,94,0.12);}
+.hero-kpi.green-kpi:hover{border-color:rgba(34,197,94,0.25);}
+.hero-kpi.green-kpi::after{background:linear-gradient(90deg,transparent,rgba(34,197,94,0.4),transparent);}
+.hero-kpi.red-kpi{background:linear-gradient(135deg,#1e0a0a,#180808);border-color:rgba(226,75,74,0.15);}
+.hero-kpi.red-kpi:hover{border-color:rgba(226,75,74,0.3);}
+.hero-kpi.red-kpi::after{background:linear-gradient(90deg,transparent,rgba(226,75,74,0.4),transparent);}
+.hero-kpi.blue-kpi{background:linear-gradient(135deg,#0a1526,#0d1a30);border-color:rgba(59,130,246,0.15);}
+.hero-kpi.blue-kpi:hover{border-color:rgba(59,130,246,0.3);}
+.hero-kpi.blue-kpi::after{background:linear-gradient(90deg,transparent,rgba(59,130,246,0.4),transparent);}
+.hero-kpi.alert-kpi{background:linear-gradient(135deg,#2a0a0a,#200808)!important;border-color:rgba(226,75,74,0.3)!important;}
+/* Shape decorativo (círculo de fundo) */
+.hk-inner{position:relative;z-index:1;}
+.hk-shape{position:absolute;right:-15px;bottom:-15px;width:80px;height:80px;border-radius:50%;opacity:0.1;pointer-events:none;}
+.accent-kpi .hk-shape{background:var(--accent);}
+.green-kpi .hk-shape{background:#22C55E;}
+.red-kpi .hk-shape,.alert-kpi .hk-shape{background:var(--red);}
+.blue-kpi .hk-shape{background:var(--blue);}
+/* Tipografia KPI */
+.hk-lbl{font-size:10px;font-weight:500;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.hk-val{font-size:24px;font-weight:800;letter-spacing:-.5px;line-height:1;white-space:nowrap;}
+@media(min-width:700px){.hk-val{font-size:28px;}}
+@media(min-width:700px){#hero-desp .hk-val{font-size:22px;letter-spacing:-.3px;}}
+.hk-sub{font-size:11px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.4);margin-top:8px;}
 .hk-trend{font-size:10px;font-weight:700;margin-top:4px;}
 .hk-trend.up{color:var(--green);}
 .hk-trend.down{color:var(--red);}
@@ -1233,29 +1250,42 @@ function renderHeroMMR(){
   const ticket=clAtivos>0?mrr/clAtivos:0;const margem=calcMargem();
   const lucro=calcLucro();const meta=getMeta();const pct=Math.min(mrr/meta*100,100);
   const items=[
-    {lbl:'MRR',val:fmtR(mrr),sub:`${clAtivos} clientes ativos`,color:'var(--accent)',cls:''},
-    {lbl:'Ticket médio',val:fmtR(ticket),sub:'por cliente',color:'#fff',cls:''},
-    {lbl:'Margem',val:margem.toFixed(1)+'%',sub:'do faturamento',color:margem<40?'var(--red)':'var(--green)',cls:margem<40?'alert-kpi':''},
-    {lbl:'Lucro líquido',val:fmtR(lucro),sub:'no mês',color:lucro>=0?'var(--green)':'var(--red)',cls:''},
+    {lbl:'MRR',val:fmtR(mrr),sub:`${clAtivos} clientes ativos`,color:'var(--accent)',cls:'accent-kpi'},
+    {lbl:'Ticket médio',val:fmtR(ticket),sub:'por cliente',color:'#fff',cls:'blue-kpi'},
+    {lbl:'Margem',val:margem.toFixed(1)+'%',sub:'do faturamento',color:margem<40?'var(--red)':'var(--green)',cls:margem<40?'red-kpi':'green-kpi'},
+    {lbl:'Lucro líquido',val:fmtR(lucro),sub:'no mês',color:lucro>=0?'var(--green)':'var(--red)',cls:lucro>=0?'green-kpi':'red-kpi'},
   ];
   document.getElementById('hero-kpis').innerHTML=items.map(k=>`
-    <div class="hero-kpi ${k.cls} ${lucro>=0?'green-kpi':'red-kpi'}">
-      <div class="hk-lbl">${k.lbl}</div>
-      <div class="hk-val animated" style="color:${k.color}">${k.val}</div>
-      <div class="hk-sub">${k.sub}</div>
+    <div class="hero-kpi ${k.cls}">
+      <div class="hk-inner">
+        <div class="hk-lbl">${k.lbl}</div>
+        <div class="hk-val animated" style="color:${k.color}">${k.val}</div>
+        <div class="hk-sub">${k.sub}</div>
+      </div>
+      <div class="hk-shape"></div>
     </div>
   `).join('');
   document.getElementById('mrr-total-label').textContent=fmtR(mrr);
 }
 
 function renderHeroFluxo(){
-  const recebido=calcMRRRecebido();const pendente=calcMRR()-recebido;const inadimp=calcInadimplencia();
-  document.getElementById('hero-fluxo').innerHTML=`
-    <div class="hero-kpi green-kpi"><div class="hk-lbl">Recebido</div><div class="hk-val animated" style="color:var(--green)">${fmtR(recebido)}</div><div class="hk-sub">confirmado no mês</div></div>
-    <div class="hero-kpi"><div class="hk-lbl">A receber</div><div class="hk-val animated" style="color:var(--yellow)">${fmtR(pendente)}</div><div class="hk-sub">aguardando pagamento</div></div>
-    <div class="hero-kpi ${inadimp>0?'alert-kpi':''}"><div class="hk-lbl">Inadimplência</div><div class="hk-val animated" style="color:${inadimp>0?'var(--red)':'var(--text2)'}">${fmtR(inadimp)}</div><div class="hk-sub">${inadimp>0?'requer atenção':'zero inadimplência'}</div></div>
-    <div class="hero-kpi"><div class="hk-lbl">Caixa acumulado</div><div class="hk-val animated" style="color:${calcCaixa()>=0?'#fff':'var(--red)'}">${fmtR(calcCaixa())}</div><div class="hk-sub">todos os meses</div></div>
-  `;
+  const recebido=calcMRRRecebido();const pendente=calcMRR()-recebido;const inadimp=calcInadimplencia();const caixa=calcCaixa();
+  const fluxoItems=[
+    {lbl:'Recebido',val:fmtR(recebido),sub:'confirmado no mês',color:'var(--green)',cls:'green-kpi'},
+    {lbl:'A receber',val:fmtR(pendente),sub:'aguardando pagamento',color:'var(--yellow)',cls:'accent-kpi'},
+    {lbl:'Inadimplência',val:fmtR(inadimp),sub:inadimp>0?'requer atenção':'zero inadimplência',color:inadimp>0?'var(--red)':'var(--text2)',cls:inadimp>0?'red-kpi':'blue-kpi'},
+    {lbl:'Caixa acumulado',val:fmtR(caixa),sub:'todos os meses',color:caixa>=0?'#fff':'var(--red)',cls:caixa>=0?'blue-kpi':'red-kpi'},
+  ];
+  document.getElementById('hero-fluxo').innerHTML=fluxoItems.map(k=>`
+    <div class="hero-kpi ${k.cls}">
+      <div class="hk-inner">
+        <div class="hk-lbl">${k.lbl}</div>
+        <div class="hk-val animated" style="color:${k.color}">${k.val}</div>
+        <div class="hk-sub">${k.sub}</div>
+      </div>
+      <div class="hk-shape"></div>
+    </div>
+  `).join('');
 }
 
 function renderHeroDesp(){
@@ -1265,13 +1295,23 @@ function renderHeroDesp(){
   const editors=calcEditoresTotal();
   const total=fixas+variaveis+terc+editors;
   const custoPct=calcCustoFixoPct();
-  document.getElementById('hero-desp').innerHTML=`
-    <div class="hero-kpi red-kpi"><div class="hk-lbl">Total despesas</div><div class="hk-val animated" style="color:var(--red)">${fmtR(total)}</div><div class="hk-sub">no mês</div></div>
-    <div class="hero-kpi"><div class="hk-lbl">Saídas fixas</div><div class="hk-val animated" style="color:#fff">${fmtR(fixas)}</div><div class="hk-sub">recorrentes</div></div>
-    <div class="hero-kpi"><div class="hk-lbl">Variáveis + freelas</div><div class="hk-val animated" style="color:#fff">${fmtR(variaveis+terc)}</div><div class="hk-sub">pontuais</div></div>
-    <div class="hero-kpi"><div class="hk-lbl">Editores</div><div class="hk-val animated" style="color:#fff">${fmtR(editors)}</div><div class="hk-sub">gestão de demanda</div></div>
-    <div class="hero-kpi ${custoPct>60?'alert-kpi':''}"><div class="hk-lbl">Custo fixo / MRR</div><div class="hk-val animated" style="color:${custoPct>60?'var(--red)':'var(--text2)'}">${custoPct.toFixed(1)}%</div><div class="hk-sub">${custoPct>60?'acima do limite':'dentro do limite'}</div></div>
-  `;
+  const despItems=[
+    {lbl:'Total despesas',val:fmtR(total),sub:'no mês',color:'var(--red)',cls:'red-kpi'},
+    {lbl:'Saídas fixas',val:fmtR(fixas),sub:'recorrentes',color:'#fff',cls:'blue-kpi'},
+    {lbl:'Variáveis + freelas',val:fmtR(variaveis+terc),sub:'pontuais',color:'#fff',cls:'blue-kpi'},
+    {lbl:'Editores',val:fmtR(editors),sub:'gestão de demanda',color:'#fff',cls:'blue-kpi'},
+    {lbl:'Custo fixo / MRR',val:custoPct.toFixed(1)+'%',sub:custoPct>60?'acima do limite':'dentro do limite',color:custoPct>60?'var(--red)':'var(--text2)',cls:custoPct>60?'red-kpi':'accent-kpi'},
+  ];
+  document.getElementById('hero-desp').innerHTML=despItems.map(k=>`
+    <div class="hero-kpi ${k.cls}">
+      <div class="hk-inner">
+        <div class="hk-lbl">${k.lbl}</div>
+        <div class="hk-val animated" style="color:${k.color}">${k.val}</div>
+        <div class="hk-sub">${k.sub}</div>
+      </div>
+      <div class="hk-shape"></div>
+    </div>
+  `).join('');
 }
 
 // NOTIFICAÇÕES — TOAST SYSTEM
