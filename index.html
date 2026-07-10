@@ -270,7 +270,7 @@ input,select,textarea,button{font-family:'Inter','Poppins',sans-serif;}
 .val-cell.green{color:var(--green);}
 .val-cell.red{color:var(--red);}
 .val-cell.accent{color:var(--accent);}
-.mmr-input{background:none;border:none;color:var(--text);font-size:12px;font-weight:700;font-family:'Poppins',sans-serif;width:90px;text-align:right;padding:3px 5px;border-radius:5px;}
+.mmr-input{background:none;border:none;color:var(--text);font-size:12px;font-weight:700;font-family:'Inter',sans-serif;width:90px;text-align:right;padding:3px 5px;border-radius:5px;}
 .mmr-input:focus{outline:none;background:var(--bg4);}
 .status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;}
 .sd-pago{background:var(--green);}
@@ -642,7 +642,7 @@ input,select,textarea,button{font-family:'Inter','Poppins',sans-serif;}
             <div class="setting-title">🎯 Meta MRR anual <span class="setting-tag">Mensal alvo</span></div>
             <div class="setting-desc">Valor de MRR mensal que você quer atingir. Aparece no gráfico e nas barras de progresso. Meta Me Produz 2026: R$ 60.000/mês.</div>
             <div class="setting-input-row">
-              <input class="setting-input" type="number" id="cfg-meta" placeholder="60000">
+              <input class="setting-input" type="text" inputmode="decimal" id="cfg-meta" placeholder="60000">
               <button class="setting-save-btn" onclick="saveCfgMeta()">Salvar</button>
             </div>
             <div id="cfg-meta-status" style="font-size:10px;color:var(--text2);margin-top:8px;"></div>
@@ -653,7 +653,7 @@ input,select,textarea,button{font-family:'Inter','Poppins',sans-serif;}
             <div class="setting-title">🧾 DAS MEI mensal</div>
             <div class="setting-desc">Imposto fixo MEI descontado no cálculo do lucro real e no balanço do Fluxo de Caixa. Padrão 2026: R$ 76,90 (serviços).</div>
             <div class="setting-input-row">
-              <input class="setting-input" type="number" id="cfg-das" placeholder="76.90" step="0.01">
+              <input class="setting-input" type="text" inputmode="decimal" id="cfg-das" placeholder="76,90">
               <button class="setting-save-btn" onclick="saveCfgDAS()">Salvar</button>
             </div>
             <div id="cfg-das-status" style="font-size:10px;color:var(--text2);margin-top:8px;"></div>
@@ -943,6 +943,22 @@ let chartComp=null;
 let clienteEditandoId=null; // cliente_id (fin_clientes.id) sendo editado
 
 function mesAtual(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+/* parseVal — aceita formato brasileiro (1.500,50) e americano (1500.50) */
+function parseVal(s){
+  s=String(s||0).trim().replace(/[^\d,.-]/g,'');
+  if(!s)return 0;
+  if(s.includes(',')&&s.includes('.')){
+    // Formato brasileiro: 1.500,50 → remove pontos de milhar, troca vírgula por ponto
+    if(s.lastIndexOf(',')>s.lastIndexOf('.')){s=s.replace(/\./g,'').replace(',','.');}
+    else{s=s.replace(/,/g,'');}
+  }else if(s.includes(',')&&!s.includes('.')){
+    const p=s.split(',');
+    // Se após vírgula tem 1-2 dígitos → separador decimal; senão → milhar
+    s=(p[1]&&p[1].length<=2)?s.replace(',','.'):s.replace(/,/g,'');
+  }
+  return parseFloat(s)||0;
+}
+
 function fmtR(v,compact=false){
   const n=Number(v||0);
   if(compact&&n>=1000)return'R$'+(n/1000).toFixed(1)+'k';
@@ -1532,7 +1548,7 @@ function renderMMRTable(){
 
       if(isCurrent){
         somaCliente+=c.valor;mesesComValor++;
-        return`<td class="val-cell"><input class="mmr-input" type="number" value="${c.valor||0}"
+        return`<td class="val-cell"><input class="mmr-input" type="text" inputmode="decimal" value="${c.valor||0}"
           onblur="updateClienteValor('${c.id}',this.value)"></td>`;
       }
       if(isPast){
@@ -1698,7 +1714,7 @@ function renderPontuais(){
   const tbody=document.getElementById('pontuais-tbody');
   tbody.innerHTML=D.pontuais.length?D.pontuais.map(p=>`<tr>
     <td><input class="ie" value="${p.descricao||''}" onblur="upField('fin_pontuais','${p.id}','descricao',this.value)"></td>
-    <td style="text-align:right"><input class="ie-n" type="number" value="${p.valor||0}" onblur="upNum('fin_pontuais','${p.id}','valor',this.value,'pontuais')"></td>
+    <td style="text-align:right"><input class="ie-n" type="text" inputmode="decimal" value="${p.valor||0}" onblur="upNum('fin_pontuais','${p.id}','valor',this.value,'pontuais')"></td>
     <td><button class="del-btn" onclick="delItem('fin_pontuais','${p.id}','pontuais')">✕</button></td>
   </tr>`).join(''):`<tr><td colspan="3" class="empty">Nenhuma entrada pontual</td></tr>`;
   document.getElementById('pontuais-total').textContent=fmtR(total);
@@ -1722,7 +1738,7 @@ function renderFixas(){
         ${['salario','prolabore','producao','marketing','infraestrutura','operacional','equipamento','terceiro','emergencia','outro'].map(v=>`<option value="${v}" ${f.categoria===v?'selected':''}>${CAT_LABELS[v]||v}</option>`).join('')}
       </select>
     </td>
-    <td style="text-align:right"><input class="ie-n" type="number" value="${f.valor||0}" onblur="upNum('fin_mes_fixas','${f.id}','valor',this.value,'fixas')"></td>
+    <td style="text-align:right"><input class="ie-n" type="text" inputmode="decimal" value="${f.valor||0}" onblur="upNum('fin_mes_fixas','${f.id}','valor',this.value,'fixas')"></td>
     <td><button class="del-btn" onclick="delFixa('${f.fixa_id}','${f.id}')" title="Excluir saída fixa">✕</button></td>
   </tr>`).join(''):`<tr><td colspan="4" class="empty">Nenhuma saída fixa</td></tr>`;
   document.getElementById('total-fixas').textContent=fmtR(total);
@@ -1751,7 +1767,7 @@ function renderVariaveis(){
   document.getElementById('variaveis-tbody').innerHTML=D.variaveis.length?D.variaveis.map(v=>`<tr>
     <td><input class="ie" value="${v.descricao||''}" onblur="upField('fin_variaveis','${v.id}','descricao',this.value)"></td>
     <td><span class="cat cat-${v.categoria||'outro'}">${CAT_LABELS[v.categoria]||v.categoria||'outro'}</span></td>
-    <td style="text-align:right"><input class="ie-n" type="number" value="${v.valor||0}" onblur="upNum('fin_variaveis','${v.id}','valor',this.value,'variaveis')"></td>
+    <td style="text-align:right"><input class="ie-n" type="text" inputmode="decimal" value="${v.valor||0}" onblur="upNum('fin_variaveis','${v.id}','valor',this.value,'variaveis')"></td>
     <td><button class="del-btn" onclick="delItem('fin_variaveis','${v.id}','variaveis')">✕</button></td>
   </tr>`).join(''):`<tr><td colspan="4" class="empty">Nenhuma saída variável</td></tr>`;
   document.getElementById('total-variaveis').textContent=fmtR(total);
@@ -1762,7 +1778,7 @@ function renderTerceiros(){
   document.getElementById('terceiros-tbody').innerHTML=D.terceiros.length?D.terceiros.map(t=>`<tr>
     <td><input class="ie" value="${t.nome||''}" onblur="upField('fin_terceiros','${t.id}','nome',this.value)"></td>
     <td><input class="ie" value="${t.cliente||''}" onblur="upField('fin_terceiros','${t.id}','cliente',this.value)"></td>
-    <td style="text-align:right"><input class="ie-n" type="number" value="${t.valor||0}" onblur="upNum('fin_terceiros','${t.id}','valor',this.value,'terceiros')"></td>
+    <td style="text-align:right"><input class="ie-n" type="text" inputmode="decimal" value="${t.valor||0}" onblur="upNum('fin_terceiros','${t.id}','valor',this.value,'terceiros')"></td>
     <td><button class="del-btn" onclick="delItem('fin_terceiros','${t.id}','terceiros')">✕</button></td>
   </tr>`).join(''):`<tr><td colspan="4" class="empty">Nenhuma terceirização</td></tr>`;
   document.getElementById('total-terceiros').textContent=fmtR(total);
@@ -2003,7 +2019,7 @@ function addEditorCard(){
 
 // AÇÕES
 async function updateClienteValor(id,val){
-  const n=parseFloat(val)||0;
+  const n=parseVal(val);
   await supa.from('fin_mes_clientes').update({valor:n}).eq('id',id);
   const c=D.clientes.find(x=>x.id===id);if(c)c.valor=n;
   renderTudo();
@@ -2024,7 +2040,7 @@ async function upField(tbl,id,campo,val){
   await salvarSnapshot();
 }
 async function upNum(tbl,id,campo,val,chave){
-  const n=parseFloat(val)||0;
+  const n=parseVal(val);
   await supa.from(tbl).update({[campo]:n}).eq('id',id);
   const item=D[chave]?.find(x=>x.id===id);if(item)item[campo]=n;
   renderTudo();await salvarSnapshot();
@@ -2107,7 +2123,7 @@ function openModal(tipo){
     <div class="mf"><label>Nome do cliente</label><input type="text" id="m-nome" placeholder="Ex: Sorria Salto"></div>
     <div class="mf-row">
       <div class="mf"><label>Plano</label><select id="m-plano"><option>Alicerce</option><option>Tração</option><option>Expansão</option><option>Só tráfego</option><option>Personalizado</option></select></div>
-      <div class="mf"><label>Valor mensal (R$)</label><input type="number" id="m-valor" placeholder="0"></div>
+      <div class="mf"><label>Valor mensal (R$)</label><input type="text" inputmode="decimal" id="m-valor" placeholder="0"></div>
     </div>
     <div class="mf-row">
       <div class="mf"><label>Dia de vencimento</label><input type="number" id="m-dia" placeholder="Ex: 5" min="1" max="31"></div>
@@ -2121,7 +2137,7 @@ function openModal(tipo){
     <div class="mf-hint">💡 Se preencher a duração, o sistema popula automaticamente todos os meses do contrato.</div>`;
   }else if(tipo==='pontual'){
     html=`<div class="mf"><label>Descrição</label><input type="text" id="m-desc" placeholder="Ex: Evento corporativo"></div>
-    <div class="mf"><label>Valor (R$)</label><input type="number" id="m-valor" placeholder="0"></div>`;
+    <div class="mf"><label>Valor (R$)</label><input type="text" inputmode="decimal" id="m-valor" placeholder="0"></div>`;
   }else if(tipo==='fixa'){
     html=`
     <div class="mf"><label>Descrição</label>
@@ -2150,7 +2166,7 @@ function openModal(tipo){
           <option value="outro">Outro</option>
         </select>
       </div>
-      <div class="mf"><label>Valor (R$)</label><input type="number" id="m-valor" placeholder="0"></div>
+      <div class="mf"><label>Valor (R$)</label><input type="text" inputmode="decimal" id="m-valor" placeholder="0"></div>
     </div>`;
   }else if(tipo==='variavel'){
     html=`<div class="mf"><label>Descrição</label><input type="text" id="m-desc" placeholder="Ex: Equipamento alugado"></div>
@@ -2162,12 +2178,12 @@ function openModal(tipo){
         <option value="emergencia">Emergência</option>
         <option value="outro">Outro</option>
       </select></div>
-      <div class="mf"><label>Valor (R$)</label><input type="number" id="m-valor" placeholder="0"></div>
+      <div class="mf"><label>Valor (R$)</label><input type="text" inputmode="decimal" id="m-valor" placeholder="0"></div>
     </div>`;
   }else if(tipo==='terceiro'){
     html=`<div class="mf"><label>Nome do freela</label><input type="text" id="m-nome" placeholder="Ex: João Câmera"></div>
     <div class="mf"><label>Cliente vinculado</label><input type="text" id="m-cliente" placeholder="Ex: Sorria Salto"></div>
-    <div class="mf"><label>Valor (R$)</label><input type="number" id="m-valor" placeholder="0"></div>`;
+    <div class="mf"><label>Valor (R$)</label><input type="text" inputmode="decimal" id="m-valor" placeholder="0"></div>`;
   }else if(tipo==='meta'){
     html=`
     <div class="mf"><label>Meta MRR anual — valor mensal alvo (R$)</label><input type="number" id="m-meta" value="${getMeta()}" placeholder="60000"></div>
@@ -2199,7 +2215,7 @@ async function salvarModal(){
       const nome=document.getElementById('m-nome').value.trim();
       if(!nome){alert('Informe o nome');btn.textContent='Salvar';return;}
       const plano=document.getElementById('m-plano').value;
-      const valor=parseFloat(document.getElementById('m-valor').value)||0;
+      const valor=parseVal(document.getElementById('m-valor').value)||0;
       const dia=parseInt(document.getElementById('m-dia').value)||5;
       const videos=parseInt(document.getElementById('m-videos').value)||1;
       const duracao=parseInt(document.getElementById('m-duracao').value)||null;
@@ -2228,30 +2244,30 @@ async function salvarModal(){
       if(mcErr)throw new Error('Erro ao criar meses do cliente: '+mcErr.message);
     }else if(modalTipo==='pontual'){
       const desc=document.getElementById('m-desc').value.trim();
-      const val=parseFloat(document.getElementById('m-valor').value)||0;
+      const val=parseVal(document.getElementById('m-valor').value)||0;
       await supa.from('fin_pontuais').insert({descricao:desc,valor:val,mes_ref:mesRef});
     }else if(modalTipo==='fixa'){
       const desc=(document.getElementById('m-desc').value||'').trim();
       if(!desc){alert('Informe a descrição');btn.textContent='Salvar';return;}
       const cat=document.getElementById('m-cat').value;
-      const val=parseFloat(document.getElementById('m-valor').value)||0;
+      const val=parseVal(document.getElementById('m-valor').value)||0;
       const{data:f}=await supa.from('fin_fixas').insert({descricao:desc,valor:val,categoria:cat}).select().single();
       await supa.from('fin_mes_fixas').insert({fixa_id:f.id,mes_ref:mesRef,valor:val});
     }else if(modalTipo==='variavel'){
       const desc=document.getElementById('m-desc').value.trim();
       const cat=document.getElementById('m-cat').value;
-      const val=parseFloat(document.getElementById('m-valor').value)||0;
+      const val=parseVal(document.getElementById('m-valor').value)||0;
       await supa.from('fin_variaveis').insert({descricao:desc,categoria:cat,valor:val,mes_ref:mesRef});
     }else if(modalTipo==='terceiro'){
       const nome=document.getElementById('m-nome').value.trim();
       const cli=document.getElementById('m-cliente').value.trim();
-      const val=parseFloat(document.getElementById('m-valor').value)||0;
+      const val=parseVal(document.getElementById('m-valor').value)||0;
       await supa.from('fin_terceiros').insert({nome,cliente:cli,valor:val,mes_ref:mesRef});
     }else if(modalTipo==='editar-cliente'){
       const nome=document.getElementById('m-nome').value.trim();
       if(!nome){alert('Informe o nome');btn.textContent='Salvar';return;}
       const plano=document.getElementById('m-plano').value;
-      const valor=parseFloat(document.getElementById('m-valor').value)||0;
+      const valor=parseVal(document.getElementById('m-valor').value)||0;
       const dia=parseInt(document.getElementById('m-dia').value)||5;
       const videos=parseInt(document.getElementById('m-videos').value)||1;
       const duracaoNova=parseInt(document.getElementById('m-duracao').value)||null;
@@ -2328,7 +2344,7 @@ function editarCliente(clienteId){
           <option ${c.plano==='Personalizado'?'selected':''}>Personalizado</option>
         </select>
       </div>
-      <div class="mf"><label>Valor mensal (R$)</label><input type="number" id="m-valor" value="${c.valor}"></div>
+      <div class="mf"><label>Valor mensal (R$)</label><input type="text" inputmode="decimal" id="m-valor" value="${c.valor}"></div>
     </div>
     <div class="mf-row">
       <div class="mf"><label>Dia de vencimento</label><input type="number" id="m-dia" value="${c.dia_vencimento}" min="1" max="31"></div>
@@ -2372,14 +2388,14 @@ function renderSettings(){
   if(stDas)stDas.textContent=`Atual: ${fmtR(getMEIDAS())} / mês`;
 }
 function saveCfgMeta(){
-  const v=parseFloat(document.getElementById('cfg-meta').value)||60000;
+  const v=parseVal(document.getElementById('cfg-meta').value)||60000;
   setMeta(v);
   const st=document.getElementById('cfg-meta-status');
   if(st){st.textContent='✓ Salvo — '+fmtR(v);st.style.color='var(--green)';}
   renderTudo();
 }
 function saveCfgDAS(){
-  const v=parseFloat(document.getElementById('cfg-das').value)||76.90;
+  const v=parseVal(document.getElementById('cfg-das').value)||76.90;
   setMEIDAS(v);
   const st=document.getElementById('cfg-das-status');
   if(st){st.textContent='✓ Salvo — '+fmtR(v)+'/mês';st.style.color='var(--green)';}
