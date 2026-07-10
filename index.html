@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Me. Financeiro</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
@@ -17,31 +17,39 @@
 */
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#0A0A0A;--bg1:#0F0F0F;--bg2:#161616;--bg3:#1E1E1E;--bg4:#252525;--bg5:#2E2E2E;
-  --border:#1E1E1E;--border2:#2A2A2A;
-  --accent:#CF910F;--a2:#B37B0D;--a-dim:rgba(207,145,15,0.07);--a-border:rgba(207,145,15,0.22);
-  --red:#FF4D4D;--red-dim:rgba(255,77,77,0.06);--red-border:rgba(255,77,77,0.2);
-  --green:#00E87A;--green-dim:rgba(0,232,122,0.06);
-  --yellow:#FFB800;--blue:#4D9FFF;--purple:#A78BFA;
-  --text:#FFFFFF;--text2:#888888;--text3:#444444;
+  /* Superfícies — design system Me Produz. */
+  --bg:#060608;--bg1:#0C0C10;--bg2:#111116;--bg3:#18181F;--bg4:#1F1F28;--bg5:#26262F;
+  /* Bordas sutis */
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.09);--border3:rgba(255,255,255,0.13);
+  /* Brand gold */
+  --accent:#C9A227;--a2:#9A7A1A;--a-dim:rgba(201,162,39,0.07);--a-border:rgba(201,162,39,0.18);
+  /* Semântica */
+  --red:#F04747;--red-dim:rgba(240,71,71,0.07);--red-border:rgba(240,71,71,0.18);
+  --green:#23C55E;--green-dim:rgba(35,197,94,0.07);
+  --yellow:#E8BB3A;--blue:#4F8EF7;--purple:#9B6DFF;
+  /* Tipografia */
+  --text:#F2F2F5;--text2:#AEAEC0;--text3:#6E6E80;--text4:#3E3E50;
+  /* Raios */
+  --r-sm:7px;--r:10px;--r-lg:14px;--r-xl:18px;
 }
-html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;-webkit-font-smoothing:antialiased;}
-input,select,textarea,button{font-family:'Poppins',sans-serif;}
-::-webkit-scrollbar{width:7px;height:7px;}
-::-webkit-scrollbar-track{background:rgba(255,255,255,0.02);border-radius:4px;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:#33334A;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter','Poppins',sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+input,select,textarea,button{font-family:'Inter','Poppins',sans-serif;}
+::selection{background:rgba(201,162,39,0.22);color:var(--text);}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.14);}
 
 /* LOGIN */
 .login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 50%,rgba(207,145,15,0.06) 0%,transparent 60%);}
 .login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:40px;width:100%;max-width:340px;}
 .login-logo{margin-bottom:32px;display:flex;flex-direction:column;gap:2px;}
 .logo-badge{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:var(--accent);border-radius:12px;font-size:15px;font-weight:900;color:#060608;letter-spacing:-1px;margin-bottom:12px;}
-.logo-title{font-size:22px;font-weight:900;letter-spacing:-0.5px;}
+.logo-title{font-size:22px;font-weight:700;letter-spacing:-0.2px;font-family:'Comfortaa',sans-serif;}
 .logo-title em{color:var(--accent);font-style:normal;}
 .logo-sub{font-size:11px;color:var(--text2);font-weight:400;}
 .lf{margin-bottom:14px;}
-.lf label{display:block;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.lf label{display:block;font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px;}
 .lf input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text);transition:border-color .2s;}
 .lf input:focus{outline:none;border-color:var(--a-border);background:var(--bg4);}
 .login-btn{width:100%;background:var(--accent);color:#060608;border:none;border-radius:10px;padding:13px;font-size:13px;font-weight:800;margin-top:8px;cursor:pointer;letter-spacing:0.3px;transition:all .2s;}
@@ -128,29 +136,31 @@ input,select,textarea,button{font-family:'Poppins',sans-serif;}
 .page{display:none;padding:24px;max-width:1200px;margin:0 auto;}
 .page.active{display:block;animation:fadeUp .25s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slide-up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse-gold{0%,100%{box-shadow:0 0 0 0 rgba(201,162,39,0);}50%{box-shadow:0 0 10px 3px rgba(201,162,39,0.3);}}
 
 /* HERO KPIs */
 .hero{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
 @media(min-width:700px){.hero{grid-template-columns:repeat(4,1fr);}}
 @media(min-width:700px){#hero-desp{grid-template-columns:repeat(5,1fr);}}
-.hero-kpi{border:1px solid var(--border2);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s,transform .18s,box-shadow .2s;cursor:default;background:linear-gradient(135deg,#161616,#121212);}
-.hero-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.4);}
+.hero-kpi{border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s,box-shadow .15s;cursor:default;background:linear-gradient(150deg,var(--bg2),#0E0E1A);animation:slide-up .35s ease both;}
+.hero-kpi:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.35);border-color:var(--border2);}
 .hero-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;opacity:0;transition:opacity .25s;}
 .hero-kpi:hover::after{opacity:1;}
-/* Card colorido por tipo — idêntico ao CRM */
-.hero-kpi.accent-kpi{background:linear-gradient(135deg,#1a1200,#120e00);border-color:rgba(207,145,15,0.15);}
-.hero-kpi.accent-kpi:hover{border-color:rgba(207,145,15,0.3);}
-.hero-kpi.accent-kpi::after{background:linear-gradient(90deg,transparent,rgba(207,145,15,0.4),transparent);}
-.hero-kpi.green-kpi{background:linear-gradient(135deg,#0a1e12,#0d2416);border-color:rgba(34,197,94,0.12);}
-.hero-kpi.green-kpi:hover{border-color:rgba(34,197,94,0.25);}
-.hero-kpi.green-kpi::after{background:linear-gradient(90deg,transparent,rgba(34,197,94,0.4),transparent);}
-.hero-kpi.red-kpi{background:linear-gradient(135deg,#1e0a0a,#180808);border-color:rgba(226,75,74,0.15);}
-.hero-kpi.red-kpi:hover{border-color:rgba(226,75,74,0.3);}
-.hero-kpi.red-kpi::after{background:linear-gradient(90deg,transparent,rgba(226,75,74,0.4),transparent);}
-.hero-kpi.blue-kpi{background:linear-gradient(135deg,#0a1526,#0d1a30);border-color:rgba(59,130,246,0.15);}
-.hero-kpi.blue-kpi:hover{border-color:rgba(59,130,246,0.3);}
-.hero-kpi.blue-kpi::after{background:linear-gradient(90deg,transparent,rgba(59,130,246,0.4),transparent);}
-.hero-kpi.alert-kpi{background:linear-gradient(135deg,#2a0a0a,#200808)!important;border-color:rgba(226,75,74,0.3)!important;}
+/* Card colorido por tipo — design system Me Produz. */
+.hero-kpi.accent-kpi{background:linear-gradient(135deg,#1a1500,#120f00);border-color:rgba(201,162,39,0.15);}
+.hero-kpi.accent-kpi:hover{border-color:rgba(201,162,39,0.3);}
+.hero-kpi.accent-kpi::after{background:linear-gradient(90deg,transparent,rgba(201,162,39,0.4),transparent);}
+.hero-kpi.green-kpi{background:linear-gradient(135deg,#0a1e12,#0d2416);border-color:rgba(35,197,94,0.12);}
+.hero-kpi.green-kpi:hover{border-color:rgba(35,197,94,0.25);}
+.hero-kpi.green-kpi::after{background:linear-gradient(90deg,transparent,rgba(35,197,94,0.4),transparent);}
+.hero-kpi.red-kpi{background:linear-gradient(135deg,#1e0a0a,#180808);border-color:rgba(240,71,71,0.15);}
+.hero-kpi.red-kpi:hover{border-color:rgba(240,71,71,0.3);}
+.hero-kpi.red-kpi::after{background:linear-gradient(90deg,transparent,rgba(240,71,71,0.4),transparent);}
+.hero-kpi.blue-kpi{background:linear-gradient(135deg,#0a1526,#0d1a30);border-color:rgba(79,142,247,0.15);}
+.hero-kpi.blue-kpi:hover{border-color:rgba(79,142,247,0.3);}
+.hero-kpi.blue-kpi::after{background:linear-gradient(90deg,transparent,rgba(79,142,247,0.4),transparent);}
+.hero-kpi.alert-kpi{background:linear-gradient(135deg,#2a0a0a,#200808)!important;border-color:rgba(240,71,71,0.3)!important;}
 /* Shape decorativo (círculo de fundo) */
 .hk-inner{position:relative;z-index:1;}
 .hk-shape{position:absolute;right:-15px;bottom:-15px;width:80px;height:80px;border-radius:50%;opacity:0.1;pointer-events:none;}
@@ -160,12 +170,11 @@ input,select,textarea,button{font-family:'Poppins',sans-serif;}
 .blue-kpi .hk-shape{background:var(--blue);}
 /* Ícone KPI */
 .hk-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-/* Tipografia KPI */
-.hk-lbl{font-size:10px;font-weight:500;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
-.hk-val{font-size:24px;font-weight:800;letter-spacing:-.5px;line-height:1;white-space:nowrap;}
-@media(min-width:700px){.hk-val{font-size:28px;}}
-@media(min-width:700px){#hero-desp .hk-val{font-size:22px;letter-spacing:-.3px;}}
-.hk-sub{font-size:11px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.4);margin-top:8px;}
+/* Tipografia KPI — design system Me Produz. */
+.hk-lbl{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:8px;}
+.hk-val{font-size:32px;font-weight:800;letter-spacing:-1.2px;line-height:1;white-space:nowrap;}
+@media(max-width:699px){.hk-val{font-size:24px;letter-spacing:-.5px;}}
+.hk-sub{font-size:10px;color:var(--text2);margin-top:5px;}
 .hk-trend{font-size:10px;font-weight:700;margin-top:4px;}
 .hk-trend.up{color:var(--green);}
 .hk-trend.down{color:var(--red);}
@@ -1263,11 +1272,11 @@ const HK_ICONS={
   people: c=>`<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="6" r="3" stroke="${c}" stroke-width="1.8"/><path d="M2 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/><path d="M15 9c1.5.6 3 2.2 3 4.5" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
 };
 const HK_CLR={
-  'accent-kpi':{clr:'#CF910F',bg:'rgba(207,145,15,0.12)'},
-  'blue-kpi':  {clr:'#4D9FFF',bg:'rgba(77,159,255,0.12)'},
-  'green-kpi': {clr:'#22C55E',bg:'rgba(34,197,94,0.12)'},
-  'red-kpi':   {clr:'#FF4D4D',bg:'rgba(255,77,77,0.12)'},
-  'alert-kpi': {clr:'#FF4D4D',bg:'rgba(255,77,77,0.12)'},
+  'accent-kpi':{clr:'#C9A227',bg:'rgba(201,162,39,0.12)'},
+  'blue-kpi':  {clr:'#4F8EF7',bg:'rgba(79,142,247,0.12)'},
+  'green-kpi': {clr:'#23C55E',bg:'rgba(35,197,94,0.12)'},
+  'red-kpi':   {clr:'#F04747',bg:'rgba(240,71,71,0.12)'},
+  'alert-kpi': {clr:'#F04747',bg:'rgba(240,71,71,0.12)'},
 };
 function hkIconHtml(type,cls){
   const {clr,bg}=HK_CLR[cls]||{clr:'#888',bg:'rgba(136,136,136,0.12)'};
