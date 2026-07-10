@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Me. Financeiro</title>
+<title>MP. Financeiro</title>
 <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
@@ -491,8 +491,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 <div class="login" id="login">
   <div class="login-box">
     <div class="login-logo">
-      <div class="logo-badge">Me.</div>
-      <div class="logo-title">Me. <em>Financeiro</em></div>
+      <div class="logo-badge">MP.</div>
+      <div class="logo-title">MP. <em>Financeiro</em></div>
       <div class="logo-sub">Gestão financeira da produtora</div>
     </div>
     <div class="lf"><label>E-mail</label><input type="email" id="l-email" placeholder="seu@email.com" autofocus></div>
@@ -506,9 +506,9 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 <div class="app" id="app">
   <div class="topbar">
     <div class="tb-brand" onclick="goTab('mmr')" style="cursor:pointer" title="Ir para MMR">
-      <div class="tb-badge">Me.</div>
+      <div class="tb-badge">MP.</div>
       <div>
-        <div class="tb-name">Me. <em>Financeiro</em></div>
+        <div class="tb-name">MP. <em>Financeiro</em></div>
       </div>
     </div>
     <div class="tb-right">
@@ -661,7 +661,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
         <div class="sec-hd">
           <div class="sec-hd-left">
             <span class="sec-title">⚙ Configurações</span>
-            <span class="sec-badge">Me. Financeiro</span>
+            <span class="sec-badge">MP. Financeiro</span>
           </div>
         </div>
         <div class="settings-grid">
@@ -903,7 +903,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
             </div>
           </div>
           <div class="cl-res-sec">
-            <div class="cl-res-title">Referência — Planos Me.Produz</div>
+            <div class="cl-res-title">Referência — Planos MP. Produz</div>
             <div class="cl-planos">
               <div class="cl-plano"><div class="cl-pnome">Alicerce</div><div class="cl-plinha">4 vídeos + 2 cortes = 6 peças</div><div class="cl-plinha">VM: 5,5h | DC: 5,5h + 5h plan</div><div class="cl-ppreco">R$ 1.799,99</div></div>
               <div class="cl-plano"><div class="cl-pnome">Tração</div><div class="cl-plinha">6 vídeos + 3 cortes = 9 peças</div><div class="cl-plinha">VM: 6h | DC: 6h + 7h plan</div><div class="cl-ppreco">R$ 2.499,99</div></div>
@@ -2103,7 +2103,7 @@ function exportarPDF(){
     h2{font-size:13px;font-weight:800;margin:16px 0 8px;}
     .footer{margin-top:32px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:12px;}
   </style></head><body>
-  <h1>Me. Financeiro — Relatório Mensal</h1>
+  <h1>MP. Financeiro — Relatório Mensal</h1>
   <div class="sub">${mes} · Gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
   <div class="grid">
     <div class="card"><div class="card-lbl">MRR</div><div class="card-val">${fmtR(mrr)}</div></div>
@@ -2130,7 +2130,7 @@ function exportarPDF(){
     <tr><td colspan="2"><b>Total</b></td><td style="text-align:right"><b class="red">${fmtR(desp)}</b></td></tr>
   </tbody></table>
   ${inadClientes.length?`<h2>⚠ Inadimplência</h2><p style="color:#dc2626">${inadClientes.map(c=>c.nome+' — '+fmtR(c.valor)).join('<br>')}</p>`:''}
-  <div class="footer">Me. Financeiro · Me Produz · ${mes}</div>
+  <div class="footer">MP. Financeiro · Me Produz. · ${mes}</div>
   </body></html>`;
   const win=window.open('','_blank');
   win.document.write(html);
@@ -2674,7 +2674,7 @@ async function seedClientes(){
 document.getElementById('ovl').addEventListener('click',e=>{if(e.target===document.getElementById('ovl'))closeModal();});
 checkAuth();
 /* Injeta footer no app */
-document.querySelector('.app').insertAdjacentHTML('beforeend',`<div class="app-footer"><span><span class="footer-dot"></span>Me. Financeiro</span><span>v3.0 · Me Produz.</span></div>`);
+document.querySelector('.app').insertAdjacentHTML('beforeend',`<div class="app-footer"><span><span class="footer-dot"></span>MP. Financeiro</span><span>v3.0 · Me Produz.</span></div>`);
 </script>
 </body>
 </html>
