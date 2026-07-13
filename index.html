@@ -899,6 +899,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
               <div class="cl-brow"><span class="cl-bl">Planejamento — Dir. Criativa</span><span class="cl-bv" id="cl-b-dc-plan">—</span></div>
               <div class="cl-brow"><span class="cl-bl">Edição — Editor</span><span class="cl-bv" id="cl-b-ed">—</span></div>
               <div class="cl-brow"><span class="cl-bl">Deslocamento</span><span class="cl-bv" id="cl-b-desloc">—</span></div>
+              <div class="cl-brow"><span class="cl-bl">Horas totais do projeto</span><span class="cl-bv" id="cl-b-horas">—</span></div>
               <div class="cl-brow cl-btotal"><span class="cl-bl">Custo total</span><span class="cl-bv" id="cl-b-total">—</span></div>
             </div>
           </div>
@@ -1069,6 +1070,8 @@ function clCalcular(){
   document.getElementById('cl-b-dc-plan').textContent=clFmt(custoDcPlan);
   document.getElementById('cl-b-ed').textContent=clFmt(custoEd);
   document.getElementById('cl-b-desloc').textContent=clFmt(desloc);
+  const horasTotais=(hVm+hDcCap)*dias+hRot+hDcPlan;
+  document.getElementById('cl-b-horas').textContent=horasTotais.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'h';
   document.getElementById('cl-b-total').textContent=clFmt(total);
   const badge=document.getElementById('cl-mbadge');
   const alvo=margemAlvo*100;
