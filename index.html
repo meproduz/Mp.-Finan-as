@@ -292,12 +292,17 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .mmr-table tbody tr:hover td{background:#16141A!important;}
 .mmr-table tbody tr:hover td.td-cur{background:rgba(201,162,39,0.13)!important;}
 
-/* ── MÊS ATUAL ── */
-.mmr-table td.td-cur{background:rgba(201,162,39,0.07)!important;}
+/* ── MÊS ATUAL — cor por status de pagamento ── */
+.mmr-table td.td-cur                 {background:rgba(201,162,39,0.07)!important;}
+.mmr-table td.td-cur.cur-pago        {background:rgba(35,197,94,0.08)!important;}
+.mmr-table td.td-cur.cur-inadimplente{background:rgba(240,71,71,0.08)!important;}
 /* ── MESES PASSADOS ── */
 .mmr-table td.td-past{opacity:.38;}
-/* ── MESES FUTUROS ── */
-.mmr-table td.td-fut{opacity:.6;}
+/* ── MESES FUTUROS — cinza opaco ── */
+.mmr-table td.td-fut{color:var(--text3);opacity:.45;}
+/* ── ÚLTIMO MÊS DO CONTRATO — vermelho ── */
+.mmr-table td.td-last{opacity:1!important;background:rgba(240,71,71,0.07)!important;}
+.mmr-table td.td-last .vc{color:var(--red)!important;font-weight:700;}
 
 /* ── STICKY — coluna cliente ── */
 .mmr-table th:first-child,
@@ -355,7 +360,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .vc.gold {color:var(--gold2);}
 .vc.dim  {color:var(--accent);}
 
-/* Input mês atual */
+/* Input mês atual — cor por status */
 .mmr-input{
   display:block;margin:8px 10px 8px auto;
   width:84px;text-align:right;
@@ -366,11 +371,20 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   padding:4px 7px;border-radius:6px;
   transition:all .12s;
 }
+.mmr-input.pago{
+  background:rgba(35,197,94,0.09);
+  border-color:rgba(35,197,94,0.28);
+  color:var(--green);
+}
+.mmr-input.inadimplente{
+  background:rgba(240,71,71,0.09);
+  border-color:rgba(240,71,71,0.28);
+  color:var(--red);
+}
 .mmr-input:focus{
   outline:none;
-  background:rgba(201,162,39,0.16);
-  border-color:rgba(201,162,39,0.4);
-  box-shadow:0 0 0 3px rgba(201,162,39,0.07);
+  border-color:rgba(255,255,255,0.25);
+  box-shadow:0 0 0 3px rgba(255,255,255,0.04);
 }
 
 /* ── LINHA TOTAL ── */
@@ -1703,22 +1717,25 @@ function renderMMRTable(){
       if(isCur){
         if(c.data_inicio&&c.data_inicio>mesRef)return`<td class="${tdCls}"><span class="vc zero">—</span></td>`;
         somaCliente+=c.valor;mesesComValor++;
-        return`<td class="${tdCls}"><input class="mmr-input" type="text" inputmode="decimal" value="${c.valor||0}" onblur="updateClienteValor('${c.id}',this.value)"></td>`;
+        // Cor do mês atual = status de pagamento
+        const curCls=c.status==='pago'?'cur-pago':c.status==='inadimplente'?'cur-inadimplente':'';
+        return`<td class="${tdCls} ${curCls}"><input class="mmr-input ${c.status}" type="text" inputmode="decimal" value="${c.valor||0}" onblur="updateClienteValor('${c.id}',this.value)"></td>`;
       }
       if(isPast){
         const hist=getClienteHistMes(c.cliente_id,m);
         if(hist&&hist.ativo&&+hist.valor>0){
           somaCliente+=+hist.valor;mesesComValor++;
+          // Verde = pago, vermelho = inadimplente, neutro = pendente
           const vcls=hist.status==='pago'?'green':hist.status==='inadimplente'?'red':'';
           return`<td class="${tdCls}"><span class="vc ${vcls}">${fmtR(hist.valor)}</span></td>`;
         }
         return`<td class="${tdCls}"><span class="vc zero">—</span></td>`;
       }
-      // futuro
+      // Futuro — cinza; último mês do contrato = vermelho
       if(!clienteAtivoNoMes(c,m))return`<td class="${tdCls}"><span class="vc zero">—</span></td>`;
       const isLast=c.duracao_meses&&c.data_inicio&&addMes(c.data_inicio,c.duracao_meses-1)===m;
       somaCliente+=c.valor;mesesComValor++;
-      return`<td class="${tdCls}"><span class="vc dim${isLast?' red':''}" title="Projeção">${fmtR(c.valor)}</span></td>`;
+      return`<td class="${isLast?'td-last':tdCls}"><span class="vc">${fmtR(c.valor)}</span></td>`;
     }).join('');
 
     const media=mesesComValor>0?somaCliente/mesesComValor:0;
