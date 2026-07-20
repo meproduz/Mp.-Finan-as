@@ -137,7 +137,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 
 /* CONTENT */
 .content{flex:1;overflow-y:auto;}
-.page{display:none;padding:24px;max-width:1200px;margin:0 auto;}
+.page{display:none;padding:28px 36px;max-width:1600px;margin:0 auto;}
 .page.active{display:block;animation:fadeUp .25s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes slide-up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
@@ -624,6 +624,178 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .prog-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;width:64px;}
 .prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
 .prog-pct{font-size:10px;font-weight:700;}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — DESKTOP FIRST (≥ 1024px)
+   Padrão de base é desktop; mobile é override.
+   ═══════════════════════════════════════════════════ */
+
+@media(min-width:1024px){
+  /* Settings: 3 colunas */
+  .settings-grid{grid-template-columns:repeat(3,1fr);}
+
+  /* Editores: 3 colunas */
+  .editores-grid{grid-template-columns:repeat(3,1fr);}
+
+  /* Resumo: 4 colunas */
+  .resumo-cards{grid-template-columns:repeat(4,1fr);}
+
+  /* Hero gap maior */
+  .hero{gap:16px;}
+
+  /* Chart maior no desktop */
+  .chart-wrap{height:300px!important;}
+
+  /* ── Despesas — fixas + variáveis lado a lado ── */
+  #page-despesas{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  /* Hero e últimas 2 seções ocupam linha inteira */
+  #page-despesas > :first-child,
+  #page-despesas > .sec:nth-child(4),
+  #page-despesas > .sec:nth-child(5){grid-column:1/-1;}
+  #page-despesas > .hero{margin-bottom:0;}
+  #page-despesas > .sec{margin-bottom:0;}
+
+  /* ── Fluxo — balanço + calendário lado a lado ── */
+  #page-fluxo{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  #page-fluxo > :first-child,
+  #page-fluxo > .sec:last-child{grid-column:1/-1;}
+  #page-fluxo > .hero{margin-bottom:0;}
+  #page-fluxo > .sec{margin-bottom:0;}
+
+  /* ── Dashboard — meta bar + oper lado a lado ── */
+  #page-dash{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  /* Hero KPIs, operacional e chart: largura total */
+  #page-dash > .hero,
+  #page-dash > .sec{grid-column:1/-1;}
+  #page-dash > :first-child{margin-bottom:0;}
+  /* meta bar e dash-section-lbl ficam em par */
+  #page-dash > #meta-full-bar{grid-column:1;}
+  #page-dash > .dash-section-lbl,
+  #page-dash > #hero-oper{grid-column:1/-1;}
+  /* Simplifica: tudo full no dash, só usa o grid pra gap */
+  #page-dash > *{grid-column:1/-1;}
+  #page-dash > .hero{margin-bottom:0;}
+  #page-dash > #meta-full-bar{margin-bottom:0;}
+}
+
+@media(min-width:1400px){
+  .page{padding:32px 56px;max-width:1900px;}
+  .hero{gap:20px;}
+  #page-despesas{gap:18px;}
+  #page-fluxo{grid-template-columns:380px 1fr;gap:18px;}
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — TABLET (640px – 1023px)
+   ═══════════════════════════════════════════════════ */
+@media(max-width:1023px) and (min-width:640px){
+  .page{padding:18px 20px;}
+  .editores-grid{grid-template-columns:1fr 1fr;}
+  .resumo-cards{grid-template-columns:repeat(3,1fr);}
+  .chart-wrap{height:240px!important;}
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (< 640px)
+   ═══════════════════════════════════════════════════ */
+@media(max-width:639px){
+  /* ── Topbar compacto ── */
+  .topbar{padding:0 12px;gap:8px;height:50px;}
+  .tb-sub{display:none;}
+  .tb-badge{width:28px;height:28px;font-size:10px;border-radius:6px;}
+  .tb-name{font-size:12px;}
+  .mes-ctrl{padding:5px 9px;gap:5px;}
+  .mes-ctrl span{min-width:76px;font-size:11px;}
+  .mes-ctrl button{font-size:16px;}
+  .logout-btn{display:none;}
+  .config-btn{padding:5px 8px;font-size:13px;}
+  .notif-btn{padding:5px 8px;font-size:13px;}
+
+  /* ── Tab bar: scroll horizontal invisível ── */
+  .tab-bar{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    flex-wrap:nowrap;
+    padding:6px 12px;
+    gap:4px;
+    scrollbar-width:none;
+  }
+  .tab-bar::-webkit-scrollbar{display:none;}
+  .tab{white-space:nowrap;flex-shrink:0;font-size:11px;padding:5px 12px;}
+
+  /* ── Pages ── */
+  .page{padding:12px 12px 28px;}
+
+  /* ── Hero grid: 2 colunas compactas ── */
+  .hero{gap:9px;}
+  .hero-kpi{padding:13px;}
+  .hk-icon{width:30px;height:30px;border-radius:8px;margin-bottom:10px;}
+  .hk-lbl{font-size:8px;letter-spacing:1.2px;margin-bottom:8px;}
+  .hk-val{font-size:19px;letter-spacing:-.5px;}
+  .hk-sub{font-size:9px;margin-top:6px;}
+
+  /* ── Sections ── */
+  .sec-hd{padding:11px 13px;}
+  .sec-title{font-size:10px;letter-spacing:.9px;}
+  .sec{margin-bottom:10px;}
+
+  /* ── Meta bar ── */
+  .meta-full{padding:12px 14px;gap:12px;flex-wrap:wrap;}
+  .meta-full-atual{font-size:20px;}
+  .meta-full-pct{font-size:16px;}
+
+  /* ── Resumo ── */
+  .resumo-cards{grid-template-columns:1fr 1fr;padding:10px;gap:7px;}
+  .rc-val{font-size:15px;}
+  .rc{padding:11px;}
+
+  /* ── Settings ── */
+  .settings-grid{grid-template-columns:1fr;padding:12px;gap:10px;}
+
+  /* ── Editores ── */
+  .editores-grid{grid-template-columns:1fr;}
+
+  /* ── Fluxo balance: 2 col ── */
+  .fluxo-balance{grid-template-columns:1fr 1fr;}
+
+  /* ── Tabelas: fonte menor ── */
+  .dtbl{font-size:11px;}
+  .dtbl th{font-size:8px;padding:8px 10px;}
+  .dtbl td{padding:8px 10px;}
+
+  /* ── Toast: full width no mobile ── */
+  .toast-container{bottom:12px;right:10px;left:10px;align-items:stretch;}
+  .toast{width:100%;}
+
+  /* ── Modal ── */
+  .modal{padding:18px 16px;}
+  .modal-title{font-size:15px;}
+  .mf-row,.mf-row3{grid-template-columns:1fr;}
+
+  /* ── Notif panel ── */
+  .notif-panel{width:calc(100vw - 24px);right:-12px;}
+
+  /* ── Dashboard section label ── */
+  .dash-section-lbl{font-size:8px;}
+
+  /* ── Chart ── */
+  .chart-wrap{height:200px!important;padding:6px 0;}
+}
 
 /* PRINT */
 @media print{
