@@ -168,6 +168,14 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .hero-kpi.blue-kpi{background:linear-gradient(135deg,#0a1526,#0d1a30);border-color:rgba(79,142,247,0.15);}
 .hero-kpi.blue-kpi:hover{border-color:rgba(79,142,247,0.3);}
 .hero-kpi.blue-kpi::after{background:linear-gradient(90deg,transparent,rgba(79,142,247,0.4),transparent);}
+.hero-kpi.purple-kpi{background:linear-gradient(135deg,#120a26,#0f0820);border-color:rgba(155,109,255,0.15);}
+.hero-kpi.purple-kpi:hover{border-color:rgba(155,109,255,0.3);}
+.hero-kpi.purple-kpi::after{background:linear-gradient(90deg,transparent,rgba(155,109,255,0.4),transparent);}
+.purple-kpi .hk-shape{background:#9B6DFF;}
+.hero-kpi.cyan-kpi{background:linear-gradient(135deg,#081e26,#0a2030);border-color:rgba(34,211,238,0.15);}
+.hero-kpi.cyan-kpi:hover{border-color:rgba(34,211,238,0.3);}
+.hero-kpi.cyan-kpi::after{background:linear-gradient(90deg,transparent,rgba(34,211,238,0.4),transparent);}
+.cyan-kpi .hk-shape{background:#22D3EE;}
 .hero-kpi.alert-kpi{background:linear-gradient(135deg,#2a0a0a,#200808)!important;border-color:rgba(240,71,71,0.3)!important;}
 /* Shape decorativo (círculo de fundo) */
 .hk-inner{position:relative;z-index:1;}
@@ -187,6 +195,9 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .hk-trend.up{color:var(--green);}
 .hk-trend.down{color:var(--red);}
 .alert-kpi{border-color:var(--red-border)!important;background:var(--red-dim)!important;}
+
+/* DASH SECTION LABEL */
+.dash-section-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;margin-top:6px;}
 
 /* META BAR MINI (dentro do KPI) */
 .meta-bar-wrap{margin-top:10px;}
@@ -692,6 +703,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
     <div class="page active" id="page-dash">
       <div class="hero" id="hero-kpis"></div>
       <div id="meta-full-bar"></div>
+      <div class="dash-section-lbl">Capacidade Operacional</div>
+      <div class="hero" id="hero-oper"></div>
       <div class="sec">
         <div class="sec-hd">
           <span class="sec-title">Evolução MRR — histórico + projeção 6 meses</span>
@@ -1445,7 +1458,7 @@ function getClienteHistMes(clienteId,mes){
 
 // RENDER TUDO
 function renderTudo(){
-  renderHeroMMR();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
+  renderHeroMMR();renderHeroOperacional();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
   renderFluxoBalance();renderFluxo();renderPontuais();
   renderFixas();renderVariaveis();renderTerceiros();renderEditores();renderHeroDesp();
   renderResumo();renderComparativo();renderMargemClientes();renderHeroFluxo();
@@ -1467,13 +1480,18 @@ const HK_ICONS={
   lock:   c=>`<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="5" y="9" width="10" height="8" rx="2" stroke="${c}" stroke-width="1.8"/><path d="M7 9V7a3 3 0 0 1 6 0v2" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
   flash:  c=>`<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M11 2L4 12h7l-2 6 9-10h-7l2-6z" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   people: c=>`<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="6" r="3" stroke="${c}" stroke-width="1.8"/><path d="M2 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/><path d="M15 9c1.5.6 3 2.2 3 4.5" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  film:   c=>`<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="10" rx="2" stroke="${c}" stroke-width="1.8"/><path d="M6 5V3M14 5V3M6 17v-2M14 17v-2M2 9h16M2 12h16" stroke="${c}" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  speed:  c=>`<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3.5 13.5A7.5 7.5 0 0 1 17 8" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/><path d="M10 10l3-4" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="10" r="1.5" fill="${c}"/></svg>`,
+  play:   c=>`<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="${c}" stroke-width="1.8"/><path d="M8.5 7.5l5 2.5-5 2.5V7.5z" fill="${c}"/></svg>`,
 };
 const HK_CLR={
-  'accent-kpi':{clr:'#C9A227',bg:'rgba(201,162,39,0.12)'},
-  'blue-kpi':  {clr:'#4F8EF7',bg:'rgba(79,142,247,0.12)'},
-  'green-kpi': {clr:'#23C55E',bg:'rgba(35,197,94,0.12)'},
-  'red-kpi':   {clr:'#F04747',bg:'rgba(240,71,71,0.12)'},
-  'alert-kpi': {clr:'#F04747',bg:'rgba(240,71,71,0.12)'},
+  'accent-kpi': {clr:'#C9A227',bg:'rgba(201,162,39,0.12)'},
+  'blue-kpi':   {clr:'#4F8EF7',bg:'rgba(79,142,247,0.12)'},
+  'green-kpi':  {clr:'#23C55E',bg:'rgba(35,197,94,0.12)'},
+  'red-kpi':    {clr:'#F04747',bg:'rgba(240,71,71,0.12)'},
+  'alert-kpi':  {clr:'#F04747',bg:'rgba(240,71,71,0.12)'},
+  'purple-kpi': {clr:'#9B6DFF',bg:'rgba(155,109,255,0.12)'},
+  'cyan-kpi':   {clr:'#22D3EE',bg:'rgba(34,211,238,0.12)'},
 };
 function hkIconHtml(type,cls){
   const {clr,bg}=HK_CLR[cls]||{clr:'#888',bg:'rgba(136,136,136,0.12)'};
@@ -1540,6 +1558,43 @@ function renderHeroDesp(){
     {lbl:'Custo fixo / MRR',val:custoPct.toFixed(1)+'%',sub:custoPct>60?'acima do limite':'dentro do limite',color:custoPct>60?'var(--red)':'var(--text2)',cls:custoPct>60?'red-kpi':'accent-kpi',icon:'pct'},
   ];
   document.getElementById('hero-desp').innerHTML=despItems.map(k=>`
+    <div class="hero-kpi ${k.cls}">
+      <div class="hk-inner">
+        ${hkIconHtml(k.icon,k.cls)}
+        <div class="hk-lbl">${k.lbl}</div>
+        <div class="hk-val animated" style="color:${k.color}">${k.val}</div>
+        <div class="hk-sub">${k.sub}</div>
+      </div>
+      <div class="hk-shape"></div>
+    </div>
+  `).join('');
+}
+
+function calcCapacidade(){
+  const clientesAtivos=D.clientes.filter(c=>c.ativo);
+  const videosContratados=clientesAtivos.reduce((a,c)=>a+(+c.videos_mes||1),0);
+  const editores=dadosEditores?.editores||[];
+  const videosProducao=editores.reduce((a,ed)=>a+ed.projetos.reduce((b,p)=>b+p.qtd,0),0);
+  const videosEntregues=editores.reduce((a,ed)=>a+ed.projetos.filter(p=>p.entregue).reduce((b,p)=>b+p.qtd,0),0);
+  const receitaVideo=videosContratados>0?calcMRR()/videosContratados:0;
+  const taxaEntrega=videosProducao>0?Math.round(videosEntregues/videosProducao*100):0;
+  return{videosContratados,videosProducao,videosEntregues,receitaVideo,taxaEntrega};
+}
+
+function renderHeroOperacional(){
+  const el=document.getElementById('hero-oper');
+  if(!el)return;
+  const{videosContratados,videosProducao,videosEntregues,receitaVideo,taxaEntrega}=calcCapacidade();
+  const pendentes=videosProducao-videosEntregues;
+  const taxaCls=taxaEntrega>=80?'green-kpi':taxaEntrega>=50?'accent-kpi':'red-kpi';
+  const taxaColor=taxaEntrega>=80?'var(--green)':taxaEntrega>=50?'var(--gold2)':'var(--red)';
+  const items=[
+    {lbl:'Vídeos/mês contratados',val:videosContratados,sub:'soma dos contratos ativos',color:'#fff',cls:'purple-kpi',icon:'film'},
+    {lbl:'Em produção',val:videosProducao,sub:`${videosEntregues} entregues · ${pendentes} pendentes`,color:'var(--cyan)',cls:'cyan-kpi',icon:'play'},
+    {lbl:'Taxa de entrega',val:taxaEntrega+'%',sub:taxaEntrega>=80?'excelente ritmo':taxaEntrega>=50?'ritmo moderado':'atenção: ritmo baixo',color:taxaColor,cls:taxaCls,icon:'speed'},
+    {lbl:'Receita por vídeo',val:fmtR(receitaVideo),sub:'MRR ÷ vídeos contratados',color:'var(--accent)',cls:'accent-kpi',icon:'mrr'},
+  ];
+  el.innerHTML=items.map(k=>`
     <div class="hero-kpi ${k.cls}">
       <div class="hk-inner">
         ${hkIconHtml(k.icon,k.cls)}
