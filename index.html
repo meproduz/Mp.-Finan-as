@@ -177,12 +177,12 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .red-kpi .hk-shape,.alert-kpi .hk-shape{background:var(--red);}
 .blue-kpi .hk-shape{background:var(--blue);}
 /* Ícone KPI */
-.hk-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-/* Tipografia KPI — design system Me Produz. */
-.hk-lbl{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:8px;}
-.hk-val{font-size:32px;font-weight:800;letter-spacing:-1.2px;line-height:1;white-space:nowrap;}
-@media(max-width:699px){.hk-val{font-size:24px;letter-spacing:-.5px;}}
-.hk-sub{font-size:10px;color:var(--text2);margin-top:5px;}
+.hk-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+/* Tipografia KPI — inspirado no relatório Melhor Sorriso */
+.hk-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.6px;margin-bottom:10px;}
+.hk-val{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums;}
+@media(max-width:699px){.hk-val{font-size:22px;letter-spacing:-.5px;}}
+.hk-sub{font-size:10px;color:var(--text3);margin-top:8px;font-weight:500;}
 .hk-trend{font-size:10px;font-weight:700;margin-top:4px;}
 .hk-trend.up{color:var(--green);}
 .hk-trend.down{color:var(--red);}
@@ -235,11 +235,11 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 /* SECTION */
 .sec{background:linear-gradient(150deg,#111118 0%,#0E0E1A 100%);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;position:relative;box-shadow:0 8px 36px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.03);}
 .sec::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);pointer-events:none;z-index:1;}
-.sec-hd{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:relative;z-index:1;}
+.sec-hd{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.05);position:relative;z-index:1;}
 .sec-hd-left{display:flex;align-items:center;gap:8px;}
-.sec-title{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-0.3px;}
-.sec-sub{font-size:10px;font-weight:300;font-style:italic;color:var(--text3);margin-top:2px;}
-.sec-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--bg4);color:var(--text2);}
+.sec-title{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:1.2px;text-transform:uppercase;}
+.sec-sub{font-size:10px;font-weight:400;color:var(--text3);margin-top:2px;}
+.sec-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text3);letter-spacing:.5px;text-transform:uppercase;}
 .sec-total-g{font-size:13px;font-weight:800;color:var(--green);}
 .sec-total-r{font-size:13px;font-weight:800;color:var(--red);}
 .add-btn{background:var(--accent);color:#080808;border:none;border-radius:var(--r-sm);padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,0.1) inset,0 4px 14px rgba(201,162,39,0.25);}
@@ -407,11 +407,29 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .sum-val.dim  {color:var(--text3);}
 .sum-val.zero {color:var(--text3);font-weight:400;}
 
-/* ── STATUS SELECT ── */
-.status-sel{background:none;border:none;font-size:10px;font-weight:700;cursor:pointer;padding:12px 10px 10px;display:block;width:100%;}
+/* ── STATUS PILL (substitui select) ── */
+.sp{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 11px 5px 8px;border-radius:20px;
+  font-size:10px;font-weight:700;letter-spacing:.2px;
+  cursor:pointer;white-space:nowrap;user-select:none;
+  border:1px solid transparent;
+  transition:filter .12s,transform .12s;
+}
+.sp::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.sp:hover{filter:brightness(1.25);transform:translateY(-1px);}
+.sp:active{transform:translateY(0);}
+.sp.sp-pago        {background:rgba(35,197,94,0.1);border-color:rgba(35,197,94,0.22);color:var(--green);}
+.sp.sp-pago::before{background:var(--green);box-shadow:0 0 4px rgba(35,197,94,0.6);}
+.sp.sp-pendente        {background:rgba(201,162,39,0.1);border-color:rgba(201,162,39,0.22);color:var(--gold2);}
+.sp.sp-pendente::before{background:var(--gold2);}
+.sp.sp-inadimplente        {background:rgba(240,71,71,0.1);border-color:rgba(240,71,71,0.22);color:var(--red);}
+.sp.sp-inadimplente::before{background:var(--red);box-shadow:0 0 4px rgba(240,71,71,0.5);animation:blink 1.5s ease-in-out infinite;}
+/* Manter status-sel para recebimentos e compatibilidade */
+.status-sel{background:none;border:none;font-size:10px;font-weight:700;cursor:pointer;padding:2px 4px;}
 .status-sel:focus{outline:none;}
-.status-sel.pago        {color:var(--green);}
-.status-sel.pendente    {color:var(--yellow);}
+.status-sel.pago{color:var(--green);}
+.status-sel.pendente{color:var(--yellow);}
 .status-sel.inadimplente{color:var(--red);}
 
 /* ── ACTIONS ── */
@@ -1755,15 +1773,13 @@ function renderMMRTable(){
       ${clienteCell}
       ${mesesCells}
       <td><span class="vc" style="color:var(--text3)">${fmtR(media)}</span></td>
-      <td>
-        <select class="status-sel ${c.status}" onchange="updateStatus('${c.id}',this.value)">
-          <option value="pago"         ${c.status==='pago'?'selected':''}>✓ Pago</option>
-          <option value="pendente"     ${c.status==='pendente'?'selected':''}>○ Pendente</option>
-          <option value="inadimplente" ${c.status==='inadimplente'?'selected':''}>✗ Inadimp.</option>
-        </select>
+      <td style="padding:8px 10px;">
+        <span class="sp sp-${c.status}" onclick="cycleStatus('${c.id}','${c.status}')" title="Clique para alternar status">
+          ${{pago:'Pago',pendente:'Pendente',inadimplente:'Inadimp.'}[c.status]||c.status}
+        </span>
       </td>
-      <td>
-        <div class="actions-cell" style="padding:0 8px">
+      <td style="padding:8px 8px;">
+        <div class="actions-cell">
           <button class="edit-btn" onclick="editarCliente('${c.cliente_id}')" title="Editar">✎</button>
           <button class="del-btn" onclick="delCliente('${c.id}')" title="Remover">✕</button>
         </div>
@@ -2202,6 +2218,10 @@ async function updateClienteValor(id,val){
   await supa.from('fin_mes_clientes').update({valor:n}).eq('id',id);
   const c=D.clientes.find(x=>x.id===id);if(c)c.valor=n;
   renderTudo();
+}
+function cycleStatus(id,current){
+  const next={pendente:'pago',pago:'inadimplente',inadimplente:'pendente'}[current]||'pendente';
+  updateStatus(id,next);
 }
 async function updateStatus(id,status){
   await supa.from('fin_mes_clientes').update({status}).eq('id',id);
