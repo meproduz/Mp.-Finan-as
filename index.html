@@ -646,7 +646,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 <div class="toast-container" id="toast-container"></div>
 <div class="app" id="app">
   <div class="topbar">
-    <div class="tb-brand" onclick="goTab('mmr')" style="cursor:pointer" title="Ir para MMR">
+    <div class="tb-brand" onclick="goTab('dash')" style="cursor:pointer" title="Ir para Dashboard">
       <div class="tb-badge">MP.</div>
       <div>
         <div class="tb-name">MP. <em>Financeiro</em></div>
@@ -677,7 +677,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   </div>
 
   <div class="tab-bar">
-    <button class="tab active" data-tab="mmr" onclick="goTab('mmr')">MMR</button>
+    <button class="tab active" data-tab="dash" onclick="goTab('dash')">Dashboard</button>
+    <button class="tab" data-tab="mmr" onclick="goTab('mmr')">MRR</button>
     <button class="tab" data-tab="fluxo" onclick="goTab('fluxo')">Fluxo de Caixa</button>
     <button class="tab" data-tab="despesas" onclick="goTab('despesas')">Despesas</button>
     <button class="tab" data-tab="resumo" onclick="goTab('resumo')">Resumo</button>
@@ -686,15 +687,28 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   </div>
 
   <div class="content">
-    <!-- MMR -->
-    <div class="page active" id="page-mmr">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dash">
       <div class="hero" id="hero-kpis"></div>
       <div id="meta-full-bar"></div>
+      <div class="sec">
+        <div class="sec-hd">
+          <span class="sec-title">Evolução MRR — histórico + projeção 6 meses</span>
+          <span style="font-size:10px;color:var(--text3)">━ real &nbsp; ╌ projetado &nbsp; ‒ meta</span>
+        </div>
+        <div class="chart-wrap" style="height:260px;padding:8px 0;">
+          <canvas id="chart-mrr"></canvas>
+        </div>
+      </div>
+    </div>
 
+    <!-- MRR -->
+    <div class="page" id="page-mmr">
       <div class="sec">
         <div class="sec-hd">
           <div class="sec-hd-left">
-            <span class="sec-title">MRR — Recorrência mensal</span>
+            <span class="sec-title">Recorrência mensal</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
             <span class="sec-total-g" id="mrr-total-label">R$ 0</span>
@@ -708,17 +722,6 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
           </table>
         </div>
       </div>
-
-      <div class="sec">
-        <div class="sec-hd">
-          <span class="sec-title">Evolução MRR — histórico + projeção 6 meses</span>
-          <span style="font-size:10px;color:var(--text2)">━ real &nbsp; ╌ projetado &nbsp; ‒ meta</span>
-        </div>
-        <div class="chart-wrap" style="height:240px;">
-          <canvas id="chart-mrr"></canvas>
-        </div>
-      </div>
-
     </div>
 
     <!-- FLUXO -->
@@ -1240,8 +1243,8 @@ async function carregar(){
   await loadClientesAno();
   await garantirMes();
   // Restaura aba ativa salva no localStorage (persiste entre refreshes)
-  const _savedTab=localStorage.getItem('mp_active_tab');
-  if(_savedTab)goTab(_savedTab);
+  const _savedTab=localStorage.getItem('mp_active_tab')||'dash';
+  goTab(_savedTab);
   carregarEditores();
   renderTudo();
   // Notificações automáticas: dispara apenas 1x por sessão de aba
