@@ -387,14 +387,25 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   box-shadow:0 0 0 3px rgba(255,255,255,0.04);
 }
 
+/* ── SCROLLBAR DA TABELA — maior e com acento dourado ── */
+.mmr-wrap::-webkit-scrollbar{height:7px;}
+.mmr-wrap::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);border-radius:4px;margin:0 4px;}
+.mmr-wrap::-webkit-scrollbar-thumb{background:rgba(201,162,39,0.35);border-radius:4px;}
+.mmr-wrap::-webkit-scrollbar-thumb:hover{background:rgba(201,162,39,0.6);}
+
 /* ── LINHA TOTAL ── */
 .mmr-table .sum-row td{
-  background:#0C0C13!important;
-  border-top:1px solid rgba(255,255,255,0.1)!important;
+  background:linear-gradient(180deg,#0F0F18 0%,#0C0C13 100%)!important;
+  border-top:2px solid rgba(201,162,39,0.2)!important;
   border-bottom:none;
 }
-.sum-lbl{display:block;padding:11px 14px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text3);}
-.sum-val{display:block;padding:12px 14px 10px;text-align:right;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;}
+.sum-lbl{display:block;padding:13px 14px;font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);}
+.sum-val{display:block;padding:13px 14px 11px;text-align:right;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text);}
+/* Cores do total */
+.sum-val.gold {color:var(--gold2);font-size:15px;}
+.sum-val.green{color:var(--green);}
+.sum-val.dim  {color:var(--text3);}
+.sum-val.zero {color:var(--text3);font-weight:400;}
 
 /* ── STATUS SELECT ── */
 .status-sel{background:none;border:none;font-size:10px;font-weight:700;cursor:pointer;padding:12px 10px 10px;display:block;width:100%;}
@@ -1770,7 +1781,7 @@ function renderMMRTable(){
     const isCur=m===mesRef;const isPast=m<mesRef;
     const tdCls=isCur?'td-cur':isPast?'td-past':'td-fut';
     const vcls=soma>0?(proj?'dim':isCur?'gold':'green'):'zero';
-    return`<td class="${tdCls}"><span class="sum-val ${vcls}" style="${proj?'opacity:.6':''}">${soma>0?fmtR(soma):'—'}</span></td>`;
+    return`<td class="${tdCls}"><span class="sum-val ${vcls}">${soma>0?fmtR(soma):'—'}</span></td>`;
   }).join('');
   const mediaAnual=calcMediaMRR();
   const somaFim=`<td><span class="sum-val gold">${fmtR(mediaAnual)}</span></td>`;
