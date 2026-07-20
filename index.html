@@ -248,57 +248,76 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .export-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);border-radius:var(--r-sm);padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;}
 .export-btn:hover{color:var(--text);border-color:var(--border3);}
 
-/* MMR TABLE */
-.mmr-wrap{overflow-x:auto;}
+/* MMR TABLE — REDESIGN */
+.mmr-wrap{overflow-x:auto;border-radius:var(--r-lg);border:1px solid var(--border);background:var(--bg2);}
 .mmr-table{width:100%;border-collapse:collapse;font-size:12px;}
-.mmr-table th{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:7px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3);}
+/* HEADER */
+.mmr-table thead tr{background:linear-gradient(180deg,#111118 0%,#0E0E15 100%);}
+.mmr-table th{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.4px;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border2);white-space:nowrap;}
 .mmr-table th.mes-col{text-align:right;}
-.mmr-table td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+/* ROWS */
+.mmr-table tbody tr{border-left:3px solid transparent;transition:background .1s;}
+.mmr-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.038);vertical-align:middle;white-space:nowrap;}
 .mmr-table tr:last-child td{border-bottom:none;}
-/* Zebra striping sutil */
-.mmr-table tbody tr:nth-child(even) td{background:rgba(255,255,255,0.018);}
-.mmr-table tbody tr:nth-child(even) td:first-child{background:rgba(20,20,28,0.98);}
-.mmr-table tr:hover td{background:rgba(201,162,39,0.04)!important;}
-.mmr-table tr:hover td:first-child{background:rgba(14,14,20,0.99)!important;}
-/* Linhas de total/média */
-.mmr-table .sum-row td{background:var(--bg3);font-weight:800;font-size:12px;border-top:2px solid var(--border2);}
+/* Zebra sutil */
+.mmr-table tbody tr:nth-child(odd) td{background:rgba(255,255,255,0.013);}
+/* Status — borda esquerda colorida por status */
+.mmr-table tbody tr.status-pago{border-left:3px solid rgba(35,197,94,0.5);}
+.mmr-table tbody tr.status-pendente{border-left:3px solid rgba(201,162,39,0.45);}
+.mmr-table tbody tr.status-inadimplente{border-left:3px solid rgba(240,71,71,0.6);}
+/* Hover */
+.mmr-table tbody tr:hover td{background:rgba(201,162,39,0.055)!important;}
+/* LINHA TOTAL */
+.mmr-table .sum-row td{background:linear-gradient(180deg,#13131C 0%,#101018 100%)!important;font-weight:800;font-size:12px;border-top:2px solid var(--border2);border-bottom:none;}
 .mmr-table .sum-row td:first-child{color:var(--text2);}
-/* Coluna de cliente fixa ao rolar */
-.mmr-table th:first-child,.mmr-table td:first-child{position:sticky;left:0;z-index:2;background:var(--bg2);border-right:1px solid var(--border2);}
-.mmr-table th:first-child{background:var(--bg3);}
-.mmr-table .sum-row td:first-child{background:var(--bg3);}
-.mmr-table .avg-row td:first-child{background:var(--bg4);}
-.mmr-table .avg-row td{background:var(--bg4);font-weight:700;font-size:11px;border-top:1px solid var(--border2);}
+/* LINHA MÉDIA */
+.mmr-table .avg-row td{background:rgba(255,255,255,0.02)!important;font-weight:700;font-size:11px;border-top:1px solid var(--border2);}
 .mmr-table .avg-row td:first-child{color:var(--text2);}
-/* Separador visual entre colunas de info e colunas de mês */
+/* STICKY — coluna cliente */
+.mmr-table th:first-child,.mmr-table td:first-child{position:sticky;left:0;z-index:2;background:var(--bg2);border-right:1px solid var(--border2);min-width:190px;}
+.mmr-table thead tr th:first-child{background:#111118;}
+.mmr-table .sum-row td:first-child,.mmr-table .avg-row td:first-child{background:#101018!important;}
+/* SEP COL */
 .mmr-table th.sep-col,.mmr-table td.sep-col{border-right:1px solid var(--border2);}
-/* Coluna do mês atual — destaque dourado */
-.mmr-table th.mes-atual,.mmr-table td.mes-atual{background:rgba(201,162,39,0.07)!important;color:var(--accent);}
-.mmr-table tbody tr:hover td.mes-atual{background:rgba(201,162,39,0.11)!important;}
-/* Meses passados esmaecidos */
-.mmr-table td.mes-passado{opacity:.45;}
-/* Meses futuros em dourado atenuado */
-.mmr-table td.mes-futuro{color:var(--accent);opacity:.7;}
-.cliente-nome{font-weight:700;font-size:12px;}
-.plano-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;margin-left:6px;}
-.pb-alicerce{background:rgba(77,159,255,0.12);color:var(--blue);}
-.pb-tracao{background:rgba(200,212,0,0.1);color:var(--accent);}
-.pb-expansao{background:rgba(0,232,122,0.1);color:var(--green);}
-.pb-personalizado{background:rgba(167,139,250,0.1);color:var(--purple);}
+/* MÊS ATUAL — destaque forte */
+.mmr-table th.mes-atual{background:rgba(201,162,39,0.2)!important;color:var(--gold2)!important;font-weight:800;}
+.mmr-table td.mes-atual{background:rgba(201,162,39,0.08)!important;}
+.mmr-table tbody tr:hover td.mes-atual{background:rgba(201,162,39,0.14)!important;}
+/* MESES PASSADOS */
+.mmr-table td.mes-passado{opacity:.36;}
+/* MESES FUTUROS */
+.mmr-table td.mes-futuro{color:var(--accent);opacity:.6;}
+/* CLIENTE INFO */
+.cliente-nome{font-weight:700;font-size:13px;color:var(--text);letter-spacing:-0.2px;}
+.plano-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;}
+.pb-alicerce{background:rgba(77,159,255,0.13);color:var(--blue);}
+.pb-tracao{background:rgba(201,162,39,0.13);color:var(--accent);}
+.pb-expansao{background:rgba(35,197,94,0.11);color:var(--green);}
+.pb-essencial{background:rgba(255,255,255,0.07);color:var(--text2);}
+.pb-personalizado{background:rgba(167,139,250,0.11);color:var(--purple);}
 .pb-sotrafego{background:rgba(255,184,0,0.1);color:var(--yellow);}
-.dia-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;color:var(--text2);background:var(--bg4);}
-.contrato-badge{font-size:9px;padding:2px 6px;border-radius:6px;background:rgba(255,184,0,0.1);color:var(--yellow);white-space:nowrap;}
-.val-cell{text-align:right;font-weight:700;color:var(--text);}
-.val-cell.zero{color:var(--text3);}
+.dia-badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:5px;color:var(--text3);background:rgba(255,255,255,0.05);}
+/* CONTRATO BADGE — com urgência visual */
+.contrato-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--text2);white-space:nowrap;display:inline-block;}
+.contrato-badge.urgente{background:rgba(240,71,71,0.1);border-color:rgba(240,71,71,0.25);color:var(--red);}
+.contrato-badge.alerta{background:rgba(255,193,7,0.09);border-color:rgba(255,193,7,0.2);color:var(--yellow);}
+/* VALORES */
+.val-cell{text-align:right;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+.val-cell.zero{color:var(--text3);font-weight:400;}
 .val-cell.green{color:var(--green);}
 .val-cell.red{color:var(--red);}
 .val-cell.accent{color:var(--accent);}
-.mmr-input{background:none;border:none;color:var(--text);font-size:12px;font-weight:700;font-family:'Inter',sans-serif;width:90px;text-align:right;padding:3px 5px;border-radius:5px;}
-.mmr-input:focus{outline:none;background:var(--bg4);}
-.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;}
-.sd-pago{background:var(--green);}
+.val-cell.proj{color:var(--accent);}
+.val-cell.proj-end{color:var(--red);}
+/* INPUT MRR — campo editável do mês atual */
+.mmr-input{background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.2);color:var(--gold2);font-size:12px;font-weight:700;font-family:'Inter',sans-serif;width:90px;text-align:right;padding:4px 7px;border-radius:6px;transition:all .12s;}
+.mmr-input:focus{outline:none;background:rgba(201,162,39,0.13);border-color:rgba(201,162,39,0.38);box-shadow:0 0 0 3px rgba(201,162,39,0.07);}
+/* STATUS DOT */
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:8px;vertical-align:middle;}
+.sd-pago{background:var(--green);box-shadow:0 0 5px rgba(35,197,94,0.55);}
 .sd-pendente{background:var(--yellow);}
-.sd-inadimplente{background:var(--red);}
+.sd-inadimplente{background:var(--red);box-shadow:0 0 5px rgba(240,71,71,0.55);animation:blink 1.5s ease-in-out infinite;}
+/* STATUS SELECT */
 .status-sel{background:none;border:none;font-size:10px;font-weight:700;cursor:pointer;padding:2px 4px;border-radius:4px;}
 .status-sel:focus{outline:none;}
 .status-sel.pago{color:var(--green);}
@@ -1582,15 +1601,15 @@ function renderMMRTable(){
     const planoClass={'Alicerce':'pb-alicerce','Tração':'pb-tracao','Expansão':'pb-expansao','Personalizado':'pb-personalizado','Só tráfego':'pb-sotrafego'}[c.plano]||'pb-alicerce';
     const sc={pago:'var(--green)',pendente:'var(--yellow)',inadimplente:'var(--red)'}[c.status]||'var(--yellow)';
 
-    // Badge de contrato com meses restantes
+    // Badge de contrato com meses restantes + urgência visual
     let contratoHtml='<span style="color:var(--text3);font-size:11px">—</span>';
     if(c.duracao_meses&&c.data_inicio){
       const fimContrato=addMes(c.data_inicio,c.duracao_meses-1);
       const restantes=calcMesesEntre(mesRef,fimContrato);
       const label=`${c.duracao_meses}m → ${mesCurto(fimContrato)}`;
-      const restLabel=restantes>0?` (${restantes}m rest.)`:restantes===0?' (último mês!)':' (encerrado)';
-      const cor=restantes<=0?'color:var(--red)':restantes<=2?'color:var(--yellow)':'';
-      contratoHtml=`<span class="contrato-badge" style="${cor}" title="${mesLabel(c.data_inicio)} → ${mesLabel(fimContrato)}">${label}${restLabel}</span>`;
+      const restLabel=restantes>0?` · ${restantes}m rest.`:restantes===0?' · último mês!':' · encerrado';
+      const urgClass=restantes<=0?'urgente':restantes<=2?'alerta':'';
+      contratoHtml=`<span class="contrato-badge ${urgClass}" title="${mesLabel(c.data_inicio)} → ${mesLabel(fimContrato)}">${label}${restLabel}</span>`;
     }
 
     let somaCliente=0;let mesesComValor=0;
@@ -1600,6 +1619,8 @@ function renderMMRTable(){
       const isPast=m<mesRef;
 
       if(isCurrent){
+        // Contrato ainda não iniciou neste mês — exibe vazio
+        if(c.data_inicio&&c.data_inicio>mesRef)return`<td class="val-cell mes-atual zero">—</td>`;
         somaCliente+=c.valor;mesesComValor++;
         return`<td class="val-cell mes-atual"><input class="mmr-input" type="text" inputmode="decimal" value="${c.valor||0}"
           onblur="updateClienteValor('${c.id}',this.value)"></td>`;
@@ -1622,8 +1643,8 @@ function renderMMRTable(){
 
     const media=mesesComValor>0?somaCliente/mesesComValor:0;
 
-    return`<tr class="${c.ativo?'':'inativo'}">
-      <td><span class="cliente-nome">${c.nome}</span></td>
+    return`<tr class="${c.ativo?'':'inativo'} status-${c.status}">
+      <td><span class="status-dot sd-${c.status}"></span><span class="cliente-nome">${c.nome}</span></td>
       <td><span class="plano-badge ${planoClass}">${c.plano}</span></td>
       <td><span class="dia-badge">dia ${c.dia_vencimento||'—'}</span></td>
       <td class="sep-col">${contratoHtml}</td>
