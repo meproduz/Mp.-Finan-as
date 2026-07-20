@@ -249,83 +249,86 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .export-btn:hover{color:var(--text);border-color:var(--border3);}
 
 /* ══════════════════════════════════════════
-   MMR TABLE v3 — coluna-cliente unificada
+   MMR TABLE v4 — sticky fix + alinhamento
    ══════════════════════════════════════════ */
-.mmr-wrap{overflow-x:auto;border-radius:var(--r-lg);border:1px solid rgba(255,255,255,0.07);background:var(--bg2);}
-.mmr-table{width:100%;border-collapse:collapse;font-size:12px;}
+.mmr-wrap{overflow-x:auto;border-radius:var(--r-lg);border:1px solid rgba(255,255,255,0.07);}
+
+/* CRITICAL: separate (não collapse) para sticky funcionar corretamente */
+.mmr-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;}
 
 /* ── HEADER ── */
-.mmr-table thead tr{background:#0E0E16;}
+.mmr-table thead tr{background:#0C0C13;}
 .mmr-table th{
   font-size:9px;font-weight:700;color:var(--text3);
   text-transform:uppercase;letter-spacing:1.5px;
-  padding:11px 12px;text-align:left;
+  padding:10px 12px;text-align:left;
   border-bottom:1px solid rgba(255,255,255,0.07);
-  white-space:nowrap;
+  white-space:nowrap;position:relative;
 }
-.mmr-table th.mc{text-align:right;padding-right:14px;}
-/* Mês atual no header */
+.mmr-table th.mc{text-align:right;}
 .mmr-table th.h-cur{
-  background:rgba(201,162,39,0.18)!important;
+  background:rgba(201,162,39,0.16)!important;
   color:var(--gold2)!important;font-weight:800;
-  border-bottom:2px solid rgba(201,162,39,0.35);
 }
 
 /* ── ROWS ── */
-.mmr-table tbody tr{
-  border-left:3px solid transparent;
-  transition:background .08s;
-}
+.mmr-table tbody tr{border-left:3px solid transparent;}
 .mmr-table td{
-  padding:0;border-bottom:1px solid rgba(255,255,255,0.04);
-  vertical-align:middle;white-space:nowrap;
+  border-bottom:1px solid rgba(255,255,255,0.045);
+  vertical-align:top;          /* CRÍTICO: top-align evita ilusão de sobreposição */
+  white-space:nowrap;
+  background:#111116;          /* base sólida — sem transparências */
 }
 .mmr-table tr:last-child td{border-bottom:none;}
 
-/* Status — borda esquerda por status */
-.mmr-table tbody tr.s-pago      {border-left:3px solid rgba(35,197,94,0.55);}
-.mmr-table tbody tr.s-pendente  {border-left:3px solid rgba(201,162,39,0.5);}
+/* Status — borda esquerda */
+.mmr-table tbody tr.s-pago        {border-left:3px solid rgba(35,197,94,0.55);}
+.mmr-table tbody tr.s-pendente    {border-left:3px solid rgba(201,162,39,0.5);}
 .mmr-table tbody tr.s-inadimplente{border-left:3px solid rgba(240,71,71,0.65);}
 
-/* Zebra sutil */
-.mmr-table tbody tr:nth-child(even) td{background:rgba(255,255,255,0.016);}
+/* Zebra sutil — usando background opaco (sem rgba) */
+.mmr-table tbody tr:nth-child(even) td{background:#0F0F1B;}
 /* Hover */
-.mmr-table tbody tr:hover td{background:rgba(201,162,39,0.055)!important;}
+.mmr-table tbody tr:hover td{background:#16141A!important;}
+.mmr-table tbody tr:hover td.td-cur{background:rgba(201,162,39,0.13)!important;}
 
 /* ── MÊS ATUAL ── */
 .mmr-table td.td-cur{background:rgba(201,162,39,0.07)!important;}
-.mmr-table tbody tr:hover td.td-cur{background:rgba(201,162,39,0.13)!important;}
 /* ── MESES PASSADOS ── */
-.mmr-table td.td-past{opacity:.35;}
+.mmr-table td.td-past{opacity:.38;}
 /* ── MESES FUTUROS ── */
-.mmr-table td.td-fut{color:var(--accent);opacity:.55;}
+.mmr-table td.td-fut{opacity:.6;}
 
-/* ── COLUNA CLIENTE (sticky) ── */
+/* ── STICKY — coluna cliente ── */
 .mmr-table th:first-child,
 .mmr-table td:first-child{
-  position:sticky;left:0;z-index:2;
-  background:var(--bg2);
-  border-right:1px solid rgba(255,255,255,0.07);
-  width:240px;min-width:240px;max-width:240px;
+  position:sticky;left:0;z-index:10;
+  width:230px;min-width:230px;max-width:230px;
+  /* Sombra direita cria separação visual clara */
+  box-shadow:3px 0 10px rgba(0,0,0,0.55);
 }
-.mmr-table thead tr th:first-child{background:#0E0E16;}
-.mmr-table .sum-row  td:first-child,
-.mmr-table .avg-row  td:first-child{background:#0D0D14!important;}
+/* Backgrounds sólidos (sem transparência!) para o sticky funcionar */
+.mmr-table th:first-child{background:#0C0C13!important;border-right:1px solid rgba(255,255,255,0.07);}
+.mmr-table td:first-child{background:#111116!important;border-right:1px solid rgba(255,255,255,0.06);}
+.mmr-table tbody tr:nth-child(even) td:first-child{background:#0F0F1B!important;}
+.mmr-table tbody tr:hover td:first-child{background:#16141A!important;}
+.mmr-table .sum-row td:first-child{background:#0C0C13!important;}
 
-/* ── CÉLULA CLIENTE — info empilhada ── */
-.cl-cell{display:flex;flex-direction:column;gap:0;padding:10px 14px;}
-.cl-top{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
-.cl-sub{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;}
-.cliente-nome{font-weight:700;font-size:13px;color:var(--text);letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:185px;}
+/* ── CÉLULA CLIENTE — duas linhas ── */
+.cl-cell{display:flex;flex-direction:column;padding:10px 14px 9px;gap:5px;}
+.cl-top{display:flex;align-items:center;gap:7px;}
+.cl-sub{display:flex;align-items:center;gap:5px;overflow:hidden;}
+.cliente-nome{font-weight:700;font-size:13px;color:var(--text);letter-spacing:-0.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px;}
 
 /* Status dot */
-.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.sdot.pago       {background:var(--green);box-shadow:0 0 6px rgba(35,197,94,0.6);}
-.sdot.pendente   {background:var(--yellow);}
-.sdot.inadimplente{background:var(--red);box-shadow:0 0 6px rgba(240,71,71,0.6);animation:blink 1.5s ease-in-out infinite;}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:1px;}
+.sdot.pago        {background:var(--green);box-shadow:0 0 6px rgba(35,197,94,0.55);}
+.sdot.pendente    {background:var(--yellow);}
+.sdot.inadimplente{background:var(--red);box-shadow:0 0 6px rgba(240,71,71,0.55);animation:blink 1.5s ease-in-out infinite;}
 
 /* Plano badge */
-.plano-badge{font-size:8px;font-weight:800;padding:1px 6px;border-radius:5px;letter-spacing:.4px;flex-shrink:0;}
+.plano-badge{font-size:8px;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.4px;flex-shrink:0;}
 .pb-alicerce   {background:rgba(77,159,255,0.14);color:#5B9EF5;}
 .pb-tracao     {background:rgba(201,162,39,0.14);color:var(--gold2);}
 .pb-expansao   {background:rgba(35,197,94,0.12);color:var(--green);}
@@ -334,17 +337,18 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .pb-sotrafego  {background:rgba(255,184,0,0.1);color:var(--yellow);}
 
 /* Dia vencimento */
-.vcto-tag{font-size:9px;color:var(--text3);font-weight:500;}
+.vcto-tag{font-size:9px;color:var(--text3);font-weight:500;flex-shrink:0;}
 
-/* Contrato badge */
+/* Contrato tag */
 .ctag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0;}
 .ctag.ok     {background:rgba(255,255,255,0.05);color:var(--text3);}
 .ctag.alerta {background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.2);color:var(--yellow);}
 .ctag.urgente{background:rgba(240,71,71,0.1);border:1px solid rgba(240,71,71,0.22);color:var(--red);}
 
 /* ── CÉLULAS DE VALOR ── */
-.vc{display:block;padding:10px 14px;text-align:right;font-weight:700;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);}
-.vc.zero{color:var(--text3);font-weight:400;}
+/* padding-top: 12px = alinha o valor com o nome do cliente (top-align) */
+.vc{display:block;padding:12px 14px 10px;text-align:right;font-weight:700;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text);}
+.vc.zero {color:var(--text3);font-weight:400;}
 .vc.green{color:var(--green);}
 .vc.red  {color:var(--red);}
 .vc.gold {color:var(--gold2);}
@@ -352,32 +356,33 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 
 /* Input mês atual */
 .mmr-input{
-  background:rgba(201,162,39,0.09);
-  border:1px solid rgba(201,162,39,0.22);
+  display:block;margin:8px 10px 8px auto;
+  width:84px;text-align:right;
+  background:rgba(201,162,39,0.1);
+  border:1px solid rgba(201,162,39,0.24);
   color:var(--gold2);font-size:12px;font-weight:700;
   font-family:'Inter',sans-serif;
-  width:86px;text-align:right;
   padding:4px 7px;border-radius:6px;
-  transition:all .12s;display:block;margin:7px 10px 7px auto;
+  transition:all .12s;
 }
 .mmr-input:focus{
   outline:none;
-  background:rgba(201,162,39,0.14);
+  background:rgba(201,162,39,0.16);
   border-color:rgba(201,162,39,0.4);
   box-shadow:0 0 0 3px rgba(201,162,39,0.07);
 }
 
 /* ── LINHA TOTAL ── */
 .mmr-table .sum-row td{
-  background:#0D0D14!important;
-  border-top:2px solid rgba(255,255,255,0.07);
+  background:#0C0C13!important;
+  border-top:1px solid rgba(255,255,255,0.1)!important;
   border-bottom:none;
 }
 .sum-lbl{display:block;padding:11px 14px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text3);}
-.sum-val{display:block;padding:11px 14px;text-align:right;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;}
+.sum-val{display:block;padding:12px 14px 10px;text-align:right;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;}
 
 /* ── STATUS SELECT ── */
-.status-sel{background:none;border:none;font-size:10px;font-weight:700;cursor:pointer;padding:8px 10px;display:block;width:100%;}
+.status-sel{background:none;border:none;font-size:10px;font-weight:700;cursor:pointer;padding:12px 10px 10px;display:block;width:100%;}
 .status-sel:focus{outline:none;}
 .status-sel.pago        {color:var(--green);}
 .status-sel.pendente    {color:var(--yellow);}
