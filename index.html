@@ -251,11 +251,16 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 /* MMR TABLE */
 .mmr-wrap{overflow-x:auto;}
 .mmr-table{width:100%;border-collapse:collapse;font-size:12px;}
-.mmr-table th{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3);}
+.mmr-table th{font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:7px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3);}
 .mmr-table th.mes-col{text-align:right;}
-.mmr-table td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+.mmr-table td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
 .mmr-table tr:last-child td{border-bottom:none;}
-.mmr-table tr:hover td{background:rgba(255,255,255,0.01);}
+/* Zebra striping sutil */
+.mmr-table tbody tr:nth-child(even) td{background:rgba(255,255,255,0.018);}
+.mmr-table tbody tr:nth-child(even) td:first-child{background:rgba(20,20,28,0.98);}
+.mmr-table tr:hover td{background:rgba(201,162,39,0.04)!important;}
+.mmr-table tr:hover td:first-child{background:rgba(14,14,20,0.99)!important;}
+/* Linhas de total/média */
 .mmr-table .sum-row td{background:var(--bg3);font-weight:800;font-size:12px;border-top:2px solid var(--border2);}
 .mmr-table .sum-row td:first-child{color:var(--text2);}
 /* Coluna de cliente fixa ao rolar */
@@ -263,10 +268,18 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .mmr-table th:first-child{background:var(--bg3);}
 .mmr-table .sum-row td:first-child{background:var(--bg3);}
 .mmr-table .avg-row td:first-child{background:var(--bg4);}
-.mmr-table tr:hover td:first-child{background:rgba(20,20,24,0.98);}
 .mmr-table .avg-row td{background:var(--bg4);font-weight:700;font-size:11px;border-top:1px solid var(--border2);}
 .mmr-table .avg-row td:first-child{color:var(--text2);}
-.cliente-nome{font-weight:700;font-size:13px;}
+/* Separador visual entre colunas de info e colunas de mês */
+.mmr-table th.sep-col,.mmr-table td.sep-col{border-right:1px solid var(--border2);}
+/* Coluna do mês atual — destaque dourado */
+.mmr-table th.mes-atual,.mmr-table td.mes-atual{background:rgba(201,162,39,0.07)!important;color:var(--accent);}
+.mmr-table tbody tr:hover td.mes-atual{background:rgba(201,162,39,0.11)!important;}
+/* Meses passados esmaecidos */
+.mmr-table td.mes-passado{opacity:.45;}
+/* Meses futuros em dourado atenuado */
+.mmr-table td.mes-futuro{color:var(--accent);opacity:.7;}
+.cliente-nome{font-weight:700;font-size:12px;}
 .plano-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;margin-left:6px;}
 .pb-alicerce{background:rgba(77,159,255,0.12);color:var(--blue);}
 .pb-tracao{background:rgba(200,212,0,0.1);color:var(--accent);}
@@ -1103,7 +1116,12 @@ async function carregar(){
   if(_savedTab)goTab(_savedTab);
   carregarEditores();
   renderTudo();
-  setTimeout(()=>showAlertToasts(),600);
+  // Notificações automáticas: dispara apenas 1x por sessão de aba
+  // sessionStorage zera ao fechar/reabrir a aba, mas sobrevive a refreshes e troca de abas internas
+  if(!sessionStorage.getItem('mp_notif_shown')){
+    sessionStorage.setItem('mp_notif_shown','1');
+    setTimeout(()=>showAlertToasts(),600);
+  }
 }
 
 async function loadClientes(){
@@ -1551,8 +1569,11 @@ function renderMMRTable(){
   const mesesAno=Array.from({length:12},(_,i)=>`${ano}-${String(i+1).padStart(2,'0')}`);
 
   document.getElementById('mmr-thead').innerHTML=`<tr>
-    <th>Cliente</th><th>Plano</th><th>Vcto</th><th>Contrato</th>
-    ${mesesAno.map(m=>`<th class="mes-col" style="color:${m===mesRef?'var(--accent)':'inherit'}">${mesCurto(m)}</th>`).join('')}
+    <th>Cliente</th><th>Plano</th><th>Vcto</th><th class="sep-col">Contrato</th>
+    ${mesesAno.map(m=>{
+      const cls=['mes-col',m===mesRef?'mes-atual':m<mesRef?'mes-passado':''].filter(Boolean).join(' ');
+      return`<th class="${cls}">${mesCurto(m)}</th>`;
+    }).join('')}
     <th class="mes-col" style="color:var(--text2)">Média</th>
     <th>Status</th><th></th>
   </tr>`;
@@ -1580,23 +1601,23 @@ function renderMMRTable(){
 
       if(isCurrent){
         somaCliente+=c.valor;mesesComValor++;
-        return`<td class="val-cell"><input class="mmr-input" type="text" inputmode="decimal" value="${c.valor||0}"
+        return`<td class="val-cell mes-atual"><input class="mmr-input" type="text" inputmode="decimal" value="${c.valor||0}"
           onblur="updateClienteValor('${c.id}',this.value)"></td>`;
       }
       if(isPast){
         const hist=getClienteHistMes(c.cliente_id,m);
         if(hist&&hist.ativo&&+hist.valor>0){
           somaCliente+=+hist.valor;mesesComValor++;
-          return`<td class="val-cell ${hist.status==='pago'?'green':hist.status==='inadimplente'?'red':''}">${fmtR(hist.valor)}</td>`;
+          return`<td class="val-cell mes-passado ${hist.status==='pago'?'green':hist.status==='inadimplente'?'red':''}">${fmtR(hist.valor)}</td>`;
         }
-        return`<td class="val-cell zero">—</td>`;
+        return`<td class="val-cell mes-passado zero">—</td>`;
       }
       // Mês futuro — mostra projeção se contrato cobrir
-      if(!clienteAtivoNoMes(c,m))return`<td class="val-cell zero">—</td>`;
+      if(!clienteAtivoNoMes(c,m))return`<td class="val-cell mes-futuro zero">—</td>`;
       // É o último mês do contrato? destaque em vermelho suave
       const isLastMonth=c.duracao_meses&&c.data_inicio&&addMes(c.data_inicio,c.duracao_meses-1)===m;
       somaCliente+=c.valor;mesesComValor++;
-      return`<td class="val-cell ${isLastMonth?'proj-end':'proj'}" title="Projeção">${fmtR(c.valor)}</td>`;
+      return`<td class="val-cell mes-futuro ${isLastMonth?'proj-end':'proj'}" title="Projeção">${fmtR(c.valor)}</td>`;
     }).join('');
 
     const media=mesesComValor>0?somaCliente/mesesComValor:0;
@@ -1605,7 +1626,7 @@ function renderMMRTable(){
       <td><span class="cliente-nome">${c.nome}</span></td>
       <td><span class="plano-badge ${planoClass}">${c.plano}</span></td>
       <td><span class="dia-badge">dia ${c.dia_vencimento||'—'}</span></td>
-      <td>${contratoHtml}</td>
+      <td class="sep-col">${contratoHtml}</td>
       ${mesesCells}
       <td class="val-cell" style="color:var(--text2)">${fmtR(media)}</td>
       <td>
@@ -1626,15 +1647,17 @@ function renderMMRTable(){
 
   // Linha de soma — passado=histórico, atual=calcMRR, futuro=projeção
   // colspan separado para a sticky não cobrir os valores
-  const somaLabel=`<td style="color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.8px">Total MRR</td><td></td><td></td><td></td>`;
+  const somaLabel=`<td style="color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.8px">Total MRR</td><td></td><td></td><td class="sep-col"></td>`;
   const somaCells=mesesAno.map(m=>{
     let soma=0; let proj=false;
     if(m===mesRef){soma=calcMRR();}
     else if(m<mesRef){soma=D.historico.find(h=>h.mes_ref===m)?.mrr||0;}
     else{soma=calcMRRProjetado(m);proj=true;}
-    const cor=soma>0?(proj?'var(--accent)':'var(--green)'):'var(--text3)';
+    const isCur=m===mesRef; const isPast=m<mesRef;
+    const cor=soma>0?(proj?'var(--accent)':isCur?'var(--accent)':'var(--green)'):'var(--text3)';
+    const extraCls=isCur?'mes-atual':isPast?'mes-passado':'mes-futuro';
     const op=proj?'opacity:.6;':'';
-    return`<td class="val-cell" style="color:${cor};${op}">${soma>0?fmtR(soma):'—'}</td>`;
+    return`<td class="val-cell ${extraCls}" style="color:${cor};${op}">${soma>0?fmtR(soma):'—'}</td>`;
   }).join('');
   const mediaAnual=calcMediaMRR();
   const somaFim=`<td class="val-cell accent">${fmtR(mediaAnual)}</td>`;
