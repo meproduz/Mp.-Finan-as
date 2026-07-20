@@ -314,12 +314,13 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .mmr-table tbody tr:hover td:first-child{background:#16141A!important;}
 .mmr-table .sum-row td:first-child{background:#0C0C13!important;}
 
-/* ── CÉLULA CLIENTE — duas linhas ── */
-.cl-cell{display:flex;flex-direction:column;padding:10px 14px 9px;gap:5px;}
-.cl-top{display:flex;align-items:center;gap:7px;}
-.cl-sub{display:flex;align-items:center;gap:5px;overflow:hidden;}
+/* ── CÉLULA CLIENTE — 3 linhas limpas ── */
+.cl-cell{display:flex;flex-direction:column;padding:9px 14px 9px;gap:3px;}
+.cl-top{display:flex;align-items:center;gap:7px;margin-bottom:1px;}
+.cl-meta{display:flex;align-items:center;gap:6px;}
+.cl-ctag{display:flex;align-items:center;margin-top:1px;}
 .cliente-nome{font-weight:700;font-size:13px;color:var(--text);letter-spacing:-0.2px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px;}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:195px;}
 
 /* Status dot */
 .sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:1px;}
@@ -1668,28 +1669,28 @@ function renderMMRTable(){
     const planoClass={'Alicerce':'pb-alicerce','Tração':'pb-tracao','Expansão':'pb-expansao','Personalizado':'pb-personalizado','Só tráfego':'pb-sotrafego','Essencial':'pb-essencial'}[c.plano]||'pb-alicerce';
     const sc={pago:'var(--green)',pendente:'var(--yellow)',inadimplente:'var(--red)'}[c.status]||'var(--yellow)';
 
-    // Contrato tag
+    // Contrato tag — texto curto, urgência visual
     let ctagHtml='';
     if(c.duracao_meses&&c.data_inicio){
       const fimContrato=addMes(c.data_inicio,c.duracao_meses-1);
       const restantes=calcMesesEntre(mesRef,fimContrato);
-      const restTxt=restantes>0?`${restantes}m rest.`:restantes===0?'último mês!':'encerrado';
+      const restSufx=restantes>0?` · ${restantes}m rest.`:restantes===0?' · último mês!':' · encerrado';
       const cClass=restantes<=0?'urgente':restantes<=2?'alerta':'ok';
-      ctagHtml=`<span class="ctag ${cClass}" title="${mesLabel(c.data_inicio)} → ${mesLabel(fimContrato)}">${c.duracao_meses}m · ${mesCurto(fimContrato)} · ${restTxt}</span>`;
+      ctagHtml=`<span class="ctag ${cClass}" title="${mesLabel(c.data_inicio)} → ${mesLabel(fimContrato)}">→ ${mesCurto(fimContrato)}${restSufx}</span>`;
     }
 
-    // Coluna cliente — info empilhada
+    // Coluna cliente — 3 linhas: nome / plano+dia / contrato
     const clienteCell=`<td>
       <div class="cl-cell">
         <div class="cl-top">
           <span class="sdot ${c.status}"></span>
           <span class="cliente-nome">${c.nome}</span>
         </div>
-        <div class="cl-sub">
+        <div class="cl-meta">
           <span class="plano-badge ${planoClass}">${c.plano}</span>
           <span class="vcto-tag">· dia ${c.dia_vencimento||'—'}</span>
-          ${ctagHtml}
         </div>
+        ${ctagHtml?`<div class="cl-ctag">${ctagHtml}</div>`:''}
       </div>
     </td>`;
 
