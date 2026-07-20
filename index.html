@@ -625,6 +625,103 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
 .prog-pct{font-size:10px;font-weight:700;}
 
+/* ════════════════════════════════════════
+   BENTO DASHBOARD — novo layout
+   ════════════════════════════════════════ */
+.dash-bento{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 288px;
+  grid-template-rows:auto auto;
+  gap:12px;
+  margin-bottom:14px;
+}
+.db-card{
+  background:linear-gradient(145deg,#0E0E18 0%,#0A0A13 100%);
+  border:1px solid rgba(255,255,255,0.055);
+  border-radius:16px;
+  padding:20px 22px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .2s,transform .15s;
+}
+.db-card:hover{border-color:rgba(255,255,255,0.1);transform:translateY(-2px);}
+.db-card::before{
+  content:'';position:absolute;top:0;left:16px;right:16px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);
+}
+/* Grid areas */
+.db-mrr    {grid-column:1/3;grid-row:1;}
+.db-lucro  {grid-column:3;grid-row:1;}
+.db-pending{grid-column:4;grid-row:1/3;}
+.db-recebido{grid-column:1;grid-row:2;}
+.db-areceber{grid-column:2;grid-row:2;}
+.db-inadimp {grid-column:3;grid-row:2;}
+
+/* Tipografia dos cards */
+.db-label{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--text3);margin-bottom:12px;display:block;}
+.db-value{font-size:32px;font-weight:900;letter-spacing:-1.5px;line-height:1;color:var(--text);font-variant-numeric:tabular-nums;display:block;}
+.db-value.sm{font-size:24px;letter-spacing:-1px;}
+.db-pill{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.db-meta{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;}
+
+/* MRR — barra de progresso embutida */
+.db-progress{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:14px;overflow:hidden;}
+.db-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--a2),var(--accent));transition:width 1s cubic-bezier(.4,0,.2,1);}
+.db-progress-lbl{display:flex;justify-content:space-between;margin-top:5px;font-size:9px;color:var(--text3);}
+
+/* Painel de pendências */
+.db-pending{
+  background:linear-gradient(145deg,#0E0E18 0%,#0A0A13 100%);
+  border:1px solid rgba(255,255,255,0.055);
+  border-radius:16px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.dbp-head{padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.055);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.dbp-title{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--text3);}
+.dbp-count-badge{font-size:10px;font-weight:800;color:var(--red);background:rgba(240,71,71,0.1);border:1px solid rgba(240,71,71,0.18);padding:2px 8px;border-radius:20px;}
+.dbp-count-ok{font-size:10px;font-weight:700;color:var(--green);background:rgba(35,197,94,0.08);border:1px solid rgba(35,197,94,0.15);padding:2px 8px;border-radius:20px;}
+.dbp-body{flex:1;overflow-y:auto;padding:4px 0;}
+.dbp-body::-webkit-scrollbar{width:3px;}
+.dbp-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+.dbp-empty{padding:28px 16px;text-align:center;font-size:11px;color:var(--text3);}
+.dbp-item{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.03);transition:background .1s;}
+.dbp-item:last-child{border-bottom:none;}
+.dbp-item:hover{background:rgba(255,255,255,0.02);}
+.dbp-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.dbp-name{font-size:11px;font-weight:700;color:var(--text);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dbp-desc{font-size:9px;margin-top:2px;font-weight:500;}
+.dbp-amount{font-size:11px;font-weight:800;text-align:right;white-space:nowrap;}
+
+/* Gráfico card */
+.dash-chart-card{background:linear-gradient(145deg,#0E0E18 0%,#0A0A13 100%);border:1px solid rgba(255,255,255,0.055);border-radius:16px;overflow:hidden;position:relative;}
+.dash-chart-card::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);}
+.dash-chart-hd{padding:18px 22px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.04);}
+.dash-chart-body{padding:16px 12px 10px;height:280px;}
+
+/* Mobile */
+@media(max-width:639px){
+  .dash-bento{grid-template-columns:1fr 1fr;gap:9px;}
+  .db-mrr{grid-column:1/-1;grid-row:auto;}
+  .db-lucro{grid-column:1;grid-row:auto;}
+  .db-inadimp{grid-column:2;grid-row:auto;}
+  .db-recebido{grid-column:1;grid-row:auto;}
+  .db-areceber{grid-column:2;grid-row:auto;}
+  .db-pending{grid-column:1/-1;grid-row:auto;max-height:220px;}
+  .db-value{font-size:22px;letter-spacing:-1px;}
+  .db-value.sm{font-size:18px;}
+  .db-card{padding:13px 14px;}
+  .dash-chart-body{height:200px;}
+}
+@media(max-width:1023px) and (min-width:640px){
+  .dash-bento{grid-template-columns:1fr 1fr;gap:11px;}
+  .db-mrr{grid-column:1/-1;grid-row:auto;}
+  .db-pending{grid-column:1/-1;grid-row:auto;max-height:200px;}
+  .db-lucro,.db-recebido{grid-column:1;grid-row:auto;}
+  .db-areceber,.db-inadimp{grid-column:2;grid-row:auto;}
+}
+
 /* ═══════════════════════════════════════════════════
    RESPONSIVE — DESKTOP FIRST (≥ 1024px)
    Padrão de base é desktop; mobile é override.
@@ -647,57 +744,36 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   .chart-wrap{height:300px!important;}
 
   /* ── Despesas — fixas + variáveis lado a lado ── */
-  #page-despesas{
+  #page-despesas.active{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:14px;
     align-items:start;
   }
-  /* Hero e últimas 2 seções ocupam linha inteira */
-  #page-despesas > :first-child,
-  #page-despesas > .sec:nth-child(4),
-  #page-despesas > .sec:nth-child(5){grid-column:1/-1;}
-  #page-despesas > .hero{margin-bottom:0;}
-  #page-despesas > .sec{margin-bottom:0;}
+  #page-despesas.active > :first-child,
+  #page-despesas.active > .sec:nth-child(4),
+  #page-despesas.active > .sec:nth-child(5){grid-column:1/-1;}
+  #page-despesas.active > .hero{margin-bottom:0;}
+  #page-despesas.active > .sec{margin-bottom:0;}
 
   /* ── Fluxo — balanço + calendário lado a lado ── */
-  #page-fluxo{
+  #page-fluxo.active{
     display:grid;
     grid-template-columns:340px 1fr;
     gap:14px;
     align-items:start;
   }
-  #page-fluxo > :first-child,
-  #page-fluxo > .sec:last-child{grid-column:1/-1;}
-  #page-fluxo > .hero{margin-bottom:0;}
-  #page-fluxo > .sec{margin-bottom:0;}
-
-  /* ── Dashboard — meta bar + oper lado a lado ── */
-  #page-dash{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    align-items:start;
-  }
-  /* Hero KPIs, operacional e chart: largura total */
-  #page-dash > .hero,
-  #page-dash > .sec{grid-column:1/-1;}
-  #page-dash > :first-child{margin-bottom:0;}
-  /* meta bar e dash-section-lbl ficam em par */
-  #page-dash > #meta-full-bar{grid-column:1;}
-  #page-dash > .dash-section-lbl,
-  #page-dash > #hero-oper{grid-column:1/-1;}
-  /* Simplifica: tudo full no dash, só usa o grid pra gap */
-  #page-dash > *{grid-column:1/-1;}
-  #page-dash > .hero{margin-bottom:0;}
-  #page-dash > #meta-full-bar{margin-bottom:0;}
+  #page-fluxo.active > :first-child,
+  #page-fluxo.active > .sec:last-child{grid-column:1/-1;}
+  #page-fluxo.active > .hero{margin-bottom:0;}
+  #page-fluxo.active > .sec{margin-bottom:0;}
 }
 
 @media(min-width:1400px){
   .page{padding:32px 56px;max-width:1900px;}
   .hero{gap:20px;}
-  #page-despesas{gap:18px;}
-  #page-fluxo{grid-template-columns:380px 1fr;gap:18px;}
+  #page-despesas.active{gap:18px;}
+  #page-fluxo.active{grid-template-columns:380px 1fr;gap:18px;}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -873,16 +949,31 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dash">
-      <div class="hero" id="hero-kpis"></div>
-      <div id="meta-full-bar"></div>
-      <div class="dash-section-lbl">Capacidade Operacional</div>
+      <!-- Elementos legados ocultos — mantidos para evitar erros JS -->
+      <div id="hero-kpis" style="display:none"></div>
+      <div id="meta-full-bar" style="display:none"></div>
+
+      <!-- BENTO FINANCEIRO + PENDÊNCIAS -->
+      <div class="dash-bento" id="dash-bento"></div>
+
+      <!-- OPERACIONAL -->
+      <div class="dash-section-lbl" style="margin-top:4px">Capacidade Operacional</div>
       <div class="hero" id="hero-oper"></div>
-      <div class="sec">
-        <div class="sec-hd">
-          <span class="sec-title">Evolução MRR — histórico + projeção 6 meses</span>
-          <span style="font-size:10px;color:var(--text3)">━ real &nbsp; ╌ projetado &nbsp; ‒ meta</span>
+
+      <!-- GRÁFICO -->
+      <div class="dash-chart-card">
+        <div class="dash-chart-hd">
+          <div>
+            <div class="dash-section-lbl" style="padding:0;margin:0;margin-bottom:3px">Evolução MRR</div>
+            <div style="font-size:10px;color:var(--text3)">histórico · projeção · meta anual</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;font-size:10px;color:var(--text3)">
+            <span><span style="color:#C9A227;font-weight:700">━</span> real</span>
+            <span><span style="color:#E8BB3A;opacity:.6;font-weight:700">╌</span> projeção</span>
+            <span><span style="color:rgba(201,162,39,0.35);font-weight:700">‒</span> meta</span>
+          </div>
         </div>
-        <div class="chart-wrap" style="height:260px;padding:8px 0;">
+        <div class="dash-chart-body">
           <canvas id="chart-mrr"></canvas>
         </div>
       </div>
@@ -1630,7 +1721,7 @@ function getClienteHistMes(clienteId,mes){
 
 // RENDER TUDO
 function renderTudo(){
-  renderHeroMMR();renderHeroOperacional();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
+  renderDashBento();renderHeroMMR();renderHeroOperacional();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
   renderFluxoBalance();renderFluxo();renderPontuais();
   renderFixas();renderVariaveis();renderTerceiros();renderEditores();renderHeroDesp();
   renderResumo();renderComparativo();renderMargemClientes();renderHeroFluxo();
@@ -1742,6 +1833,99 @@ function renderHeroDesp(){
   `).join('');
 }
 
+function renderDashBento(){
+  const el=document.getElementById('dash-bento');
+  if(!el)return;
+  const mrr=calcMRR();const meta=getMeta();
+  const pct=Math.min(mrr/meta*100,100);
+  const recebido=calcMRRRecebido();
+  const aReceber=Math.max(mrr-recebido,0);
+  const inadimp=calcInadimplencia();
+  const lucro=calcLucro();const margem=calcMargem();
+  const clAtivos=D.clientes.filter(c=>c.ativo);
+
+  // Pendências
+  const pends=[];
+  clAtivos.filter(c=>c.status==='inadimplente').forEach(c=>{
+    pends.push({type:'inad',name:c.nome,desc:'Inadimplente',amount:c.valor,color:'var(--red)',bg:'rgba(240,71,71,0.12)',icon:'⚠'});
+  });
+  clAtivos.filter(c=>c.duracao_meses&&c.data_inicio).forEach(c=>{
+    const fim=addMes(c.data_inicio,c.duracao_meses-1);
+    const rest=calcMesesEntre(mesRef,fim);
+    if(rest>=0&&rest<=2){
+      const urg=rest===0;
+      pends.push({type:'contrato',name:c.nome,desc:urg?'Último mês de contrato':`${rest}m para encerrar`,amount:null,color:urg?'var(--red)':'var(--yellow)',bg:urg?'rgba(240,71,71,0.12)':'rgba(232,187,58,0.1)',icon:'📅'});
+    }
+  });
+
+  const mrrClr=mrr>=meta?'var(--green)':'var(--accent)';
+  const lucroClr=lucro>=0?'var(--green)':'var(--red)';
+  const margemClr=margem>=40?'var(--green)':margem>=25?'var(--yellow)':'var(--red)';
+  const inadClr=inadimp>0?'var(--red)':'var(--text3)';
+  const pagos=clAtivos.filter(c=>c.status==='pago').length;
+  const pendentes=clAtivos.filter(c=>c.status==='pendente').length;
+  const inadims=clAtivos.filter(c=>c.status==='inadimplente').length;
+
+  el.innerHTML=`
+  <div class="db-card db-mrr">
+    <span class="db-label">MRR — ${mesLabel(mesRef)}</span>
+    <span class="db-value" style="color:${mrrClr}">${fmtR(mrr)}</span>
+    <div class="db-progress"><div class="db-progress-fill" style="width:${pct.toFixed(1)}%"></div></div>
+    <div class="db-progress-lbl"><span>Meta ${fmtR(meta)}</span><span style="color:${mrrClr};font-weight:700">${pct.toFixed(0)}% atingido</span></div>
+  </div>
+
+  <div class="db-card db-lucro">
+    <span class="db-label">Lucro líquido</span>
+    <span class="db-value sm" style="color:${lucroClr}">${fmtR(lucro)}</span>
+    <div class="db-meta">
+      <span class="db-pill" style="background:${margem>=40?'rgba(35,197,94,0.1)':'rgba(240,71,71,0.1)'};color:${margemClr}">Margem ${margem.toFixed(1)}%</span>
+    </div>
+  </div>
+
+  <div class="db-pending">
+    <div class="dbp-head">
+      <span class="dbp-title">Pendências</span>
+      ${pends.length>0
+        ?`<span class="dbp-count-badge">${pends.length}</span>`
+        :`<span class="dbp-count-ok">✓ OK</span>`}
+    </div>
+    <div class="dbp-body">
+      ${pends.length===0
+        ?`<div class="dbp-empty">Nenhuma pendência crítica</div>`
+        :pends.map(p=>`
+          <div class="dbp-item">
+            <div class="dbp-icon" style="background:${p.bg}">${p.icon}</div>
+            <div>
+              <div class="dbp-name">${p.name}</div>
+              <div class="dbp-desc" style="color:${p.color}">${p.desc}</div>
+            </div>
+            ${p.amount!=null?`<div class="dbp-amount" style="color:${p.color}">${fmtR(p.amount)}</div>`:`<div></div>`}
+          </div>`).join('')}
+    </div>
+  </div>
+
+  <div class="db-card db-recebido">
+    <span class="db-label">Recebido</span>
+    <span class="db-value sm" style="color:var(--green)">${fmtR(recebido)}</span>
+    <div class="db-meta"><span class="db-pill" style="background:rgba(35,197,94,0.08);color:var(--text3)">${pagos} cliente${pagos!==1?'s':''}</span></div>
+  </div>
+
+  <div class="db-card db-areceber">
+    <span class="db-label">A receber</span>
+    <span class="db-value sm" style="color:var(--gold2)">${fmtR(aReceber)}</span>
+    <div class="db-meta"><span class="db-pill" style="background:rgba(201,162,39,0.08);color:var(--text3)">${pendentes} pendente${pendentes!==1?'s':''}</span></div>
+  </div>
+
+  <div class="db-card db-inadimp">
+    <span class="db-label">Inadimplência</span>
+    <span class="db-value sm" style="color:${inadClr}">${inadimp>0?fmtR(inadimp):'R$ 0'}</span>
+    <div class="db-meta"><span class="db-pill" style="background:${inadims>0?'rgba(240,71,71,0.08)':'rgba(255,255,255,0.04)'};color:var(--text3)">${inadims} cliente${inadims!==1?'s':''}</span></div>
+  </div>`;
+
+  // Atualiza label da aba MRR
+  const lbl=document.getElementById('mrr-total-label');if(lbl)lbl.textContent=fmtR(mrr);
+}
+
 function calcCapacidade(){
   const clientesAtivos=D.clientes.filter(c=>c.ativo);
   const videosContratados=clientesAtivos.reduce((a,c)=>a+(+c.videos_mes||1),0);
@@ -1756,15 +1940,15 @@ function calcCapacidade(){
 function renderHeroOperacional(){
   const el=document.getElementById('hero-oper');
   if(!el)return;
-  const{videosContratados,videosProducao,videosEntregues,receitaVideo,taxaEntrega}=calcCapacidade();
+  const{videosContratados,videosProducao,videosEntregues,taxaEntrega}=calcCapacidade();
   const pendentes=videosProducao-videosEntregues;
   const taxaCls=taxaEntrega>=80?'green-kpi':taxaEntrega>=50?'accent-kpi':'red-kpi';
   const taxaColor=taxaEntrega>=80?'var(--green)':taxaEntrega>=50?'var(--gold2)':'var(--red)';
   const items=[
-    {lbl:'Vídeos/mês contratados',val:videosContratados,sub:'soma dos contratos ativos',color:'#fff',cls:'purple-kpi',icon:'film'},
-    {lbl:'Em produção',val:videosProducao,sub:`${videosEntregues} entregues · ${pendentes} pendentes`,color:'var(--cyan)',cls:'cyan-kpi',icon:'play'},
-    {lbl:'Taxa de entrega',val:taxaEntrega+'%',sub:taxaEntrega>=80?'excelente ritmo':taxaEntrega>=50?'ritmo moderado':'atenção: ritmo baixo',color:taxaColor,cls:taxaCls,icon:'speed'},
-    {lbl:'Receita por vídeo',val:fmtR(receitaVideo),sub:'MRR ÷ vídeos contratados',color:'var(--accent)',cls:'accent-kpi',icon:'mrr'},
+    {lbl:'Contratados/mês',val:videosContratados,sub:'soma dos contratos ativos',color:'#fff',cls:'purple-kpi',icon:'film'},
+    {lbl:'Em produção',val:videosProducao,sub:`${pendentes} pendentes este mês`,color:'var(--cyan)',cls:'cyan-kpi',icon:'play'},
+    {lbl:'Entregues',val:videosEntregues,sub:`de ${videosProducao} em produção`,color:videosEntregues>0?'var(--green)':'var(--text3)',cls:'green-kpi',icon:'check'},
+    {lbl:'Taxa de entrega',val:taxaEntrega+'%',sub:taxaEntrega>=80?'ritmo excelente':taxaEntrega>=50?'ritmo moderado':'atenção: ritmo baixo',color:taxaColor,cls:taxaCls,icon:'speed'},
   ];
   el.innerHTML=items.map(k=>`
     <div class="hero-kpi ${k.cls}">
@@ -2037,12 +2221,10 @@ function renderMMRTable(){
 }
 
 function renderChart(){
-  // 6 meses atrás + mês atual + 6 meses à frente = 13 pontos
   const meses=Array.from({length:13},(_,i)=>addMes(mesRef,i-6));
   const labels=meses.map(m=>mesCurto(m));
   const meta=getMeta();
 
-  // Linha real (passado + atual)
   const mrrReal=meses.map(m=>{
     if(m>mesRef)return null;
     const h=D.historico.find(x=>x.mes_ref===m);
@@ -2051,51 +2233,113 @@ function renderChart(){
     return null;
   });
 
-  // Linha projetada (atual → futuro, dashed)
   const mrrProj=meses.map(m=>{
-    if(m<mesRef)return null; // só a partir do mês atual
+    if(m<mesRef)return null;
     return calcMRRProjetado(m);
   });
 
-  // Linha de meta (flat)
   const metaLine=meses.map(()=>meta);
 
-  const ctx=document.getElementById('chart-mrr').getContext('2d');
+  const canvas=document.getElementById('chart-mrr');
+  const ctx=canvas.getContext('2d');
   if(chartMMR)chartMMR.destroy();
+
+  // Gradiente dourado sob a linha real
+  const h=canvas.parentElement.offsetHeight||280;
+  const gradReal=ctx.createLinearGradient(0,0,0,h);
+  gradReal.addColorStop(0,'rgba(201,162,39,0.22)');
+  gradReal.addColorStop(0.55,'rgba(201,162,39,0.06)');
+  gradReal.addColorStop(1,'rgba(201,162,39,0)');
+
+  const gradProj=ctx.createLinearGradient(0,0,0,h);
+  gradProj.addColorStop(0,'rgba(232,187,58,0.08)');
+  gradProj.addColorStop(1,'rgba(232,187,58,0)');
+
+  const tickClr='#52526A';
+  const gridClr='rgba(255,255,255,0.04)';
+
   chartMMR=new Chart(ctx,{
     type:'line',
     data:{labels,datasets:[
       {
         label:'MRR real',data:mrrReal,
-        borderColor:'#C8D400',backgroundColor:'rgba(200,212,0,0.07)',
-        borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#C8D400',
-        tension:0.35,fill:true,spanGaps:false,
+        borderColor:'#C9A227',backgroundColor:gradReal,
+        borderWidth:2.5,
+        pointRadius:5,pointHoverRadius:7,
+        pointBackgroundColor:'#C9A227',
+        pointBorderColor:'rgba(201,162,39,0.25)',pointBorderWidth:4,
+        pointHoverBackgroundColor:'#E8BB3A',
+        tension:0.42,fill:true,spanGaps:false,
       },
       {
         label:'Projeção',data:mrrProj,
-        borderColor:'#FFB800',backgroundColor:'rgba(255,184,0,0.04)',
-        borderWidth:2,pointRadius:3,pointBackgroundColor:'#FFB800',
-        borderDash:[6,4],tension:0.35,fill:false,spanGaps:false,
+        borderColor:'#E8BB3A',backgroundColor:gradProj,
+        borderWidth:2,borderDash:[7,5],
+        pointRadius:3,pointHoverRadius:6,
+        pointBackgroundColor:'#E8BB3A',
+        pointBorderColor:'rgba(232,187,58,0.2)',pointBorderWidth:3,
+        tension:0.42,fill:true,spanGaps:false,
       },
       {
         label:'Meta',data:metaLine,
-        borderColor:'rgba(200,212,0,0.3)',backgroundColor:'transparent',
-        borderWidth:1,pointRadius:0,borderDash:[3,5],
-        tension:0,fill:false,spanGaps:true,
+        borderColor:'rgba(201,162,39,0.28)',backgroundColor:'transparent',
+        borderWidth:1.5,borderDash:[4,6],
+        pointRadius:0,tension:0,fill:false,spanGaps:true,
       }
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{display:true,labels:{color:'#44445A',font:{size:10,family:'Poppins'},boxWidth:12,padding:14}},
-        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtR(c.parsed.y)}`}}
+        legend:{
+          display:true,
+          labels:{
+            color:tickClr,
+            font:{size:10,family:'Inter'},
+            boxWidth:10,boxHeight:10,
+            usePointStyle:true,pointStyleWidth:10,
+            padding:18,
+          }
+        },
+        tooltip:{
+          backgroundColor:'#111118',
+          borderColor:'rgba(255,255,255,0.08)',
+          borderWidth:1,
+          padding:12,
+          titleColor:'#AEAEC0',
+          titleFont:{size:10,family:'Inter',weight:'600'},
+          bodyColor:'#F2F2F5',
+          bodyFont:{size:12,family:'Inter',weight:'700'},
+          callbacks:{
+            title:items=>mesCurto(meses[items[0].dataIndex]),
+            label:c=>` ${c.dataset.label}  ${fmtR(c.parsed.y)}`,
+          }
+        }
       },
       scales:{
-        x:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#44445A',font:{size:10,family:'Poppins'},callback(v){
-          // Destaca mês atual
-          const m=meses[v];return m===mesRef?'▶ '+labels[v]:labels[v];
-        }}},
-        y:{grid:{color:'rgba(255,255,255,0.03)'},ticks:{color:'#44445A',font:{size:10,family:'Poppins'},callback:v=>fmtR(v,true)}},
+        x:{
+          grid:{color:gridClr,drawBorder:false},
+          border:{display:false},
+          ticks:{
+            color:tickClr,
+            font:{size:10,family:'Inter'},
+            maxRotation:0,
+            callback(v){
+              const m=meses[v];
+              return m===mesRef?'▸ '+labels[v]:labels[v];
+            }
+          }
+        },
+        y:{
+          grid:{color:gridClr,drawBorder:false},
+          border:{display:false},
+          ticks:{
+            color:tickClr,
+            font:{size:10,family:'Inter'},
+            callback:v=>fmtR(v,true),
+            maxTicksLimit:6,
+          }
+        }
       }
     }
   });
