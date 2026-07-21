@@ -14,6 +14,7 @@
   ALTER TABLE fin_clientes ADD COLUMN IF NOT EXISTS data_inicio TEXT DEFAULT NULL;
   ALTER TABLE fin_clientes ADD COLUMN IF NOT EXISTS videos_mes INT DEFAULT 1;
   ALTER TABLE fin_fixas ADD COLUMN IF NOT EXISTS categoria TEXT DEFAULT 'operacional';
+  ALTER TABLE fin_clientes ADD COLUMN IF NOT EXISTS encerrado BOOLEAN DEFAULT FALSE;
 */
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -460,6 +461,25 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .tgl-thumb{position:absolute;top:3px;left:3px;width:13px;height:13px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none;}
 .tgl input:checked~.tgl-thumb{transform:translateX(15px);}
 .inativo{opacity:.35;}
+/* ENCERRADO */
+.encerrado-row{opacity:.28;filter:saturate(0);}
+.encerrado-row td{text-decoration:line-through;text-decoration-color:rgba(255,255,255,0.2);}
+.encerrado-row .cliente-nome{text-decoration:none;}
+.badge-enc{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(110,110,128,0.15);color:var(--text3);border:1px solid rgba(255,255,255,0.07);margin-left:4px;}
+.mmr-toggle-enc{background:none;border:1px solid var(--border2);color:var(--text3);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;margin-left:8px;}
+.mmr-toggle-enc:hover,.mmr-toggle-enc.active{color:var(--accent);border-color:var(--a-border);background:var(--a-dim);}
+/* ALERTA D-2 */
+.rec-d2{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:rgba(232,187,58,0.15);color:var(--yellow);border:1px solid rgba(232,187,58,0.25);margin-left:6px;animation:blink 2s ease-in-out infinite;}
+/* DELTA BADGE (comparativo mês anterior) */
+.kpi-delta{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:5px;}
+.kpi-delta.up{background:rgba(35,197,94,0.12);color:var(--green);border:1px solid rgba(35,197,94,0.2);}
+.kpi-delta.down{background:rgba(240,71,71,0.1);color:var(--red);border:1px solid rgba(240,71,71,0.18);}
+.kpi-delta.flat{background:rgba(110,110,128,0.1);color:var(--text3);border:1px solid rgba(255,255,255,0.07);}
+/* BOTÃO ENCERRAR no modal */
+.btn-enc{background:rgba(110,110,128,0.08);border:1px solid rgba(110,110,128,0.2);color:var(--text3);border-radius:var(--r-sm);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-enc:hover{color:var(--red);border-color:rgba(240,71,71,0.25);background:rgba(240,71,71,0.06);}
+.btn-reativar{background:rgba(35,197,94,0.08);border:1px solid rgba(35,197,94,0.2);color:var(--green);border-radius:var(--r-sm);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-reativar:hover{background:rgba(35,197,94,0.14);}
 
 /* CHART */
 .chart-wrap{padding:20px;position:relative;height:220px;}
@@ -1537,7 +1557,8 @@ async function loadClientes(){
   // Só cria registro automático se o contrato estiver ativo no mês navegado
   for(const c of(cl||[])){
     if(!mc?.find(m=>m.cliente_id===c.id)){
-      // Verifica se contrato cobre este mês
+      // Verifica se contrato cobre este mês e se cliente não foi encerrado
+      if(c.encerrado)continue; // Cliente inativo — não cria registro
       const contratoAtivo=!c.duracao_meses||!c.data_inicio||mesRef<addMes(c.data_inicio,c.duracao_meses);
       if(!contratoAtivo)continue; // Contrato encerrado — não cria registro fantasma
       await supa.from('fin_mes_clientes').upsert(
@@ -1560,6 +1581,7 @@ async function loadClientes(){
     duracao_meses:m.fin_clientes?.duracao_meses||null,
     data_inicio:m.fin_clientes?.data_inicio||null,
     videos_mes:m.fin_clientes?.videos_mes||1,
+    encerrado:m.fin_clientes?.encerrado||false,
     valor:+m.valor||0,ativo:m.ativo,status:m.status||'pendente',
   }));
 }
@@ -1609,15 +1631,15 @@ async function salvarSnapshot(){
 }
 
 // CÁLCULOS
-function calcMRR(){return D.clientes.filter(c=>c.ativo).reduce((a,c)=>a+c.valor,0);}
-function calcMRRRecebido(){return D.clientes.filter(c=>c.ativo&&c.status==='pago').reduce((a,c)=>a+c.valor,0);}
+function calcMRR(){return D.clientes.filter(c=>c.ativo&&!c.encerrado).reduce((a,c)=>a+c.valor,0);}
+function calcMRRRecebido(){return D.clientes.filter(c=>c.ativo&&!c.encerrado&&c.status==='pago').reduce((a,c)=>a+c.valor,0);}
 function calcFat(){return calcMRR()+D.pontuais.reduce((a,p)=>a+(+p.valor||0),0);}
 function calcDesp(){return D.fixas.reduce((a,f)=>a+f.valor,0)+D.variaveis.reduce((a,v)=>a+(+v.valor||0),0)+D.terceiros.reduce((a,t)=>a+(+t.valor||0),0)+calcEditoresTotal();}
 function calcLucro(){return calcFat()-calcDesp();}
 function calcMargem(){const f=calcFat();return f>0?(calcLucro()/f*100):0;}
 function calcCustoFixoPct(){const mrr=calcMRR();return mrr>0?(D.fixas.reduce((a,f)=>a+f.valor,0)/mrr*100):0;}
 function calcCaixa(){return D.historico.filter(h=>h.mes_ref<mesRef).reduce((a,h)=>a+(+h.lucro_liquido||0),0)+calcLucro();}
-function calcInadimplencia(){return D.clientes.filter(c=>c.ativo&&c.status==='inadimplente').reduce((a,c)=>a+c.valor,0);}
+function calcInadimplencia(){return D.clientes.filter(c=>c.ativo&&!c.encerrado&&c.status==='inadimplente').reduce((a,c)=>a+c.valor,0);}
 function calcMediaMRR(){
   const mesesComDado=D.historico.filter(h=>h.mrr>0);
   if(!mesesComDado.length)return calcMRR();
@@ -1762,7 +1784,7 @@ function hkIconHtml(type,cls){
 }
 
 function renderHeroMMR(){
-  const mrr=calcMRR();const clAtivos=D.clientes.filter(c=>c.ativo).length;
+  const mrr=calcMRR();const clAtivos=D.clientes.filter(c=>c.ativo&&!c.encerrado).length;
   const ticket=clAtivos>0?mrr/clAtivos:0;const margem=calcMargem();
   const lucro=calcLucro();const meta=getMeta();const pct=Math.min(mrr/meta*100,100);
   const items=[
@@ -1785,13 +1807,32 @@ function renderHeroMMR(){
   document.getElementById('mrr-total-label').textContent=fmtR(mrr);
 }
 
+function calcDelta(atual,anterior){
+  if(!anterior||anterior===0)return null;
+  const diff=atual-anterior;const pct=diff/anterior*100;
+  return{diff,pct,up:diff>=0};
+}
+function deltaHtml(delta,fmt='R$'){
+  if(!delta)return'';
+  const cls=delta.up?'up':'down';
+  const sinal=delta.up?'▲':'▼';
+  const valor=fmt==='R$'?fmtR(Math.abs(delta.diff)):`${Math.abs(delta.pct).toFixed(1)}%`;
+  return`<div class="kpi-delta ${cls}">${sinal} ${valor} vs mês ant.</div>`;
+}
 function renderHeroFluxo(){
-  const recebido=calcMRRRecebido();const pendente=calcMRR()-recebido;const inadimp=calcInadimplencia();const caixa=calcCaixa();
+  const recebido=calcMRRRecebido();const mrr=calcMRR();const pendente=mrr-recebido;const inadimp=calcInadimplencia();const caixa=calcCaixa();
+  // Comparativo: busca mês anterior no historico
+  const mesAnt=addMes(mesRef,-1);
+  const histAnt=D.historico.find(h=>h.mes_ref===mesAnt);
+  const mrrAnt=histAnt?.mrr||0;
+  const recebidoAnt=histAnt?.recebido||null;
+  const deltaRec=recebidoAnt!=null?calcDelta(recebido,recebidoAnt):calcDelta(mrr,mrrAnt);
+  const deltaMRR=calcDelta(mrr,mrrAnt);
   const fluxoItems=[
-    {lbl:'Recebido',val:fmtR(recebido),sub:'confirmado no mês',color:'var(--green)',cls:'green-kpi',icon:'check'},
-    {lbl:'A receber',val:fmtR(pendente),sub:'aguardando pagamento',color:'var(--yellow)',cls:'accent-kpi',icon:'clock'},
-    {lbl:'Inadimplência',val:fmtR(inadimp),sub:inadimp>0?'requer atenção':'zero inadimplência',color:inadimp>0?'var(--red)':'var(--text2)',cls:inadimp>0?'red-kpi':'blue-kpi',icon:'alert'},
-    {lbl:'Caixa acumulado',val:fmtR(caixa),sub:'todos os meses',color:caixa>=0?'#fff':'var(--red)',cls:caixa>=0?'blue-kpi':'red-kpi',icon:'bank'},
+    {lbl:'Recebido',val:fmtR(recebido),sub:'confirmado no mês',color:'var(--green)',cls:'green-kpi',icon:'check',delta:deltaRec},
+    {lbl:'A receber',val:fmtR(pendente),sub:'aguardando pagamento',color:'var(--yellow)',cls:'accent-kpi',icon:'clock',delta:null},
+    {lbl:'Inadimplência',val:fmtR(inadimp),sub:inadimp>0?'requer atenção':'zero inadimplência',color:inadimp>0?'var(--red)':'var(--text2)',cls:inadimp>0?'red-kpi':'blue-kpi',icon:'alert',delta:null},
+    {lbl:'Caixa acumulado',val:fmtR(caixa),sub:'todos os meses',color:caixa>=0?'#fff':'var(--red)',cls:caixa>=0?'blue-kpi':'red-kpi',icon:'bank',delta:null},
   ];
   document.getElementById('hero-fluxo').innerHTML=fluxoItems.map(k=>`
     <div class="hero-kpi ${k.cls}">
@@ -1800,6 +1841,7 @@ function renderHeroFluxo(){
         <div class="hk-lbl">${k.lbl}</div>
         <div class="hk-val animated" style="color:${k.color}">${k.val}</div>
         <div class="hk-sub">${k.sub}</div>
+        ${k.delta?deltaHtml(k.delta):''}
       </div>
       <div class="hk-shape"></div>
     </div>
@@ -2111,8 +2153,10 @@ function renderMMRTable(){
   const mesesAno=Array.from({length:12},(_,i)=>`${ano}-${String(i+1).padStart(2,'0')}`);
 
   // ── HEADER ──
+  const encCount=D.clientes.filter(c=>c.encerrado).length;
+  const showEnc=localStorage.getItem('mp_show_enc')==='1';
   document.getElementById('mmr-thead').innerHTML=`<tr>
-    <th>Cliente</th>
+    <th>Cliente${encCount>0?`<button class="mmr-toggle-enc${showEnc?' active':''}" onclick="toggleMostrarEnc()" title="Mostrar/ocultar clientes encerrados">${showEnc?'▲':'▼'} Ex-clientes (${encCount})</button>`:''}</th>
     ${mesesAno.map(m=>{
       const isCur=m===mesRef;
       return`<th class="mc${isCur?' h-cur':''}">${mesCurto(m)}</th>`;
@@ -2183,19 +2227,22 @@ function renderMMRTable(){
 
     const media=mesesComValor>0?somaCliente/mesesComValor:0;
 
-    return`<tr class="${c.ativo?'':'inativo'} s-${c.status}">
+    const isEnc=c.encerrado;
+    const showEnc2=localStorage.getItem('mp_show_enc')==='1';
+    const hiddenStyle=isEnc&&!showEnc2?'display:none':'';
+    return`<tr class="${c.ativo&&!isEnc?'':'inativo'} s-${c.status}${isEnc?' encerrado-row':''}" style="${hiddenStyle}" data-enc="${isEnc?'1':'0'}">
       ${clienteCell}
       ${mesesCells}
       <td><span class="vc" style="color:var(--text3)">${fmtR(media)}</span></td>
-      <td style="padding:8px 10px;">
+      <td style="padding:8px 10px;">${isEnc?`<span class="badge-enc">Encerrado</span>`:`
         <span class="sp sp-${c.status}" onclick="cycleStatus('${c.id}','${c.status}')" title="Clique para alternar status">
           ${{pago:'Pago',pendente:'Pendente',inadimplente:'Inadimp.'}[c.status]||c.status}
-        </span>
+        </span>`}
       </td>
       <td style="padding:8px 8px;">
         <div class="actions-cell">
           <button class="edit-btn" onclick="editarCliente('${c.cliente_id}')" title="Editar">✎</button>
-          <button class="del-btn" onclick="delCliente('${c.id}')" title="Remover">✕</button>
+          ${isEnc?`<button class="edit-btn" onclick="encerrarCliente('${c.cliente_id}',true)" title="Reativar cliente" style="color:var(--green)">↺</button>`:`<button class="del-btn" onclick="delCliente('${c.id}')" title="Remover">✕</button>`}
         </div>
       </td>
     </tr>`;
@@ -2353,15 +2400,20 @@ function renderFluxo(){
     {label:'Semana 4 — dias 22 a 31',dias:[22,23,24,25,26,27,28,29,30,31]},
   ];
   let totalMes=0;
+  const hoje=new Date();const diaHoje=hoje.getDate();const mesHoje=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
   const html=semanas.map(sem=>{
-    const clientesSem=D.clientes.filter(c=>c.ativo&&sem.dias.includes(+c.dia_vencimento));
+    const clientesSem=D.clientes.filter(c=>c.ativo&&!c.encerrado&&sem.dias.includes(+c.dia_vencimento));
     if(!clientesSem.length)return'';
     const totalSem=clientesSem.reduce((a,c)=>a+c.valor,0);
     totalMes+=totalSem;
     const rows=clientesSem.map(c=>{
       const stColor={pago:'var(--green)',pendente:'var(--yellow)',inadimplente:'var(--red)'}[c.status];
+      // Alerta D-2: só mostra no mês atual, pagamento pendente, vence em ≤2 dias
+      const difDias=+c.dia_vencimento-diaHoje;
+      const d2=mesRef===mesHoje&&c.status==='pendente'&&difDias>=0&&difDias<=2;
+      const d2Html=d2?`<span class="rec-d2">⏰ vence ${difDias===0?'hoje':difDias===1?'amanhã':'em 2 dias'}</span>`:'';
       return`<div class="receb-row">
-        <div><div class="receb-nome">${c.nome}</div><div class="receb-dia">Vence dia ${c.dia_vencimento}</div></div>
+        <div><div class="receb-nome">${c.nome}${d2Html}</div><div class="receb-dia">Vence dia ${c.dia_vencimento}</div></div>
         <div class="receb-status">
           <select class="status-sel ${c.status}" onchange="updateStatus('${c.id}',this.value)" style="color:${stColor}">
             <option value="pago" ${c.status==='pago'?'selected':''}>✓ Pago</option>
@@ -3034,9 +3086,37 @@ function editarCliente(clienteId){
       <input type="number" id="m-add-meses" placeholder="Ex: 6 (adiciona ao final do contrato atual)" min="1">
     </div>
     <div class="mf-hint">💡 Para renovar: preencha "adicionar meses" sem alterar início. Para recriar: altere início e duração.</div>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 2px;">
+      <span style="font-size:11px;color:var(--text3)">Situação do contrato</span>
+      ${c.encerrado
+        ?`<button class="btn-reativar" onclick="encerrarCliente('${clienteEditandoId}',true);document.getElementById('ovl').classList.remove('open')">↺ Reativar cliente</button>`
+        :`<button class="btn-enc" onclick="encerrarCliente('${clienteEditandoId}',false);document.getElementById('ovl').classList.remove('open')">Encerrar contrato</button>`
+      }
+    </div>
   `;
   document.getElementById('ovl').classList.add('open');
   setTimeout(()=>document.getElementById('m-nome')?.focus(),100);
+}
+
+// ENCERRAR / REATIVAR CLIENTE
+async function encerrarCliente(clienteId, reativar=false){
+  const label=reativar?'Reativar':'Encerrar';
+  if(!confirm(`${label} este cliente?`))return;
+  // Atualiza fin_clientes.encerrado
+  await supa.from('fin_clientes').update({encerrado:!reativar}).eq('id',clienteId);
+  // Se encerrar: seta fin_mes_clientes.ativo=false para o mês atual
+  if(!reativar){
+    const rec=D.clientes.find(c=>c.cliente_id===clienteId);
+    if(rec)await supa.from('fin_mes_clientes').update({ativo:false}).eq('id',rec.id);
+  }
+  showToast(reativar?'↺':'✓',`Cliente ${reativar?'reativado':'encerrado'} com sucesso`,reativar?'green':'blue',3000);
+  await carregar();
+}
+function toggleMostrarEnc(){
+  const cur=localStorage.getItem('mp_show_enc')==='1';
+  localStorage.setItem('mp_show_enc',cur?'0':'1');
+  renderMMRTable();
 }
 
 // NAVEGAR
