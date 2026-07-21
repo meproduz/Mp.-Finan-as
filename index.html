@@ -239,14 +239,17 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .proj-atual-row td{background:rgba(207,145,15,0.05);font-weight:700;}
 
 /* FLUXO BALANCE */
-.fluxo-balance{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px 0;}
-@media(max-width:600px){.fluxo-balance{grid-template-columns:1fr 1fr;}}
-/* Dentro da col lateral do fluxo (≤460px de largura), empilha os cards */
-#page-fluxo.active .fluxo-balance{grid-template-columns:1fr;}
-.fb-card{background:var(--bg3);border-radius:10px;padding:14px;}
-.fb-lbl{font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
-.fb-val{font-size:16px;font-weight:900;letter-spacing:-.5px;}
-.fb-sub{font-size:9px;color:var(--text2);margin-top:3px;}
+.fluxo-balance{display:flex;flex-direction:column;gap:0;padding:16px 18px;}
+.fb-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;}
+.fb-saldo-row{padding-top:16px;}
+.fb-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text2);flex-shrink:0;margin-top:2px;}
+.fb-info{flex:1;min-width:0;}
+.fb-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.fb-val{font-size:18px;font-weight:900;letter-spacing:-.5px;line-height:1.1;}
+.fb-sub{font-size:9px;color:var(--text3);margin-top:2px;}
+.fb-divider{height:1px;background:var(--border);margin:0 0;}
+.fb-bar-bg{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:6px;}
+.fb-bar-fill{height:100%;border-radius:2px;transition:width .7s ease;}
 
 /* SECTION */
 .sec{background:linear-gradient(150deg,#111118 0%,#0E0E1A 100%);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;position:relative;box-shadow:0 8px 36px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.03);}
@@ -509,6 +512,10 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .hist-mes.pendente{border-color:rgba(232,187,58,0.22);}
 .hist-mes.pendente .hist-mes-val{color:var(--yellow);}
 .hist-mes.inativo .hist-mes-val{color:var(--text4);}
+.hist-mes.clickable{cursor:pointer;transition:border-color .15s,background .15s;}
+.hist-mes.clickable:hover{border-color:rgba(201,162,39,0.35);background:rgba(201,162,39,0.07);}
+.hist-mes-hint{font-size:8px;color:var(--text3);margin-top:3px;opacity:0;transition:opacity .15s;}
+.hist-mes.clickable:hover .hist-mes-hint{opacity:1;}
 
 /* DAS MEI PAINEL */
 .das-painel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;}
@@ -548,7 +555,9 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .receb-val.pago{color:var(--green);}
 .receb-val.pendente{color:var(--yellow);}
 .receb-val.inadimplente{color:var(--red);}
-.receb-status{display:flex;align-items:center;gap:6px;}
+.receb-row > div:first-child{flex:1;min-width:0;}
+.receb-nome{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.receb-status{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px;}
 /* SAÍDAS NO FLUXO */
 .saida-row{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;border-bottom:1px solid var(--border);opacity:.75;}
 .saida-row:last-of-type{border-bottom:none;}
@@ -960,8 +969,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   /* ── Editores ── */
   .editores-grid{grid-template-columns:1fr;}
 
-  /* ── Fluxo balance: 2 col ── */
-  .fluxo-balance{grid-template-columns:1fr 1fr;}
+  /* ── Fluxo balance mobile: col única ── */
+  .fb-val{font-size:15px;}
 
   /* ── Tabelas: fonte menor ── */
   .dtbl{font-size:11px;}
@@ -1706,7 +1715,7 @@ async function loadClientes(){
 async function loadClientesAno(){
   const ano=anoAtual();
   const{data}=await supa.from('fin_mes_clientes')
-    .select('cliente_id,mes_ref,valor,ativo,status')
+    .select('id,cliente_id,mes_ref,valor,ativo,status')
     .gte('mes_ref',`${ano}-01`)
     .lte('mes_ref',`${ano}-12`);
   // Dedup por (cliente_id + mes_ref) — pega o mais recente (último da lista)
@@ -1865,24 +1874,39 @@ function renderFluxoBalance(){
   if(el2)el2.textContent=mesLabel(mesRef);
   const entradas=calcFat();
   const saidas=calcDesp();
-  const saldo=entradas-saidas;
   const das=getMEIDAS();
-  const saldoReal=saldo-das;
+  const saldoReal=entradas-(saidas+das);
+  const pctDesp=entradas>0?Math.min((saidas+das)/entradas*100,100):0;
+  const saldoCor=saldoReal>=0?'var(--green)':'var(--red)';
+
   el.innerHTML=`
-    <div class="fb-card">
-      <div class="fb-lbl">Entradas previstas</div>
-      <div class="fb-val" style="color:var(--green)">${fmtR(entradas)}</div>
-      <div class="fb-sub">MRR + pontuais</div>
+    <div class="fb-row">
+      <div class="fb-icon" style="background:rgba(35,197,94,0.12)">↑</div>
+      <div class="fb-info">
+        <div class="fb-lbl">Entradas</div>
+        <div class="fb-val" style="color:var(--green)">${fmtR(entradas)}</div>
+        <div class="fb-sub">MRR + pontuais</div>
+      </div>
     </div>
-    <div class="fb-card">
-      <div class="fb-lbl">Saídas previstas</div>
-      <div class="fb-val" style="color:var(--red)">${fmtR(saidas+das)}</div>
-      <div class="fb-sub">fixas + variáveis + DAS MEI</div>
+    <div class="fb-divider"></div>
+    <div class="fb-row">
+      <div class="fb-icon" style="background:rgba(240,71,71,0.1)">↓</div>
+      <div class="fb-info">
+        <div class="fb-lbl">Saídas</div>
+        <div class="fb-val" style="color:var(--red)">${fmtR(saidas+das)}</div>
+        <div class="fb-sub">fixas + variáveis + DAS MEI</div>
+        <div class="fb-bar-bg"><div class="fb-bar-fill" style="width:${pctDesp.toFixed(1)}%;background:${pctDesp>80?'var(--red)':pctDesp>60?'var(--yellow)':'var(--green)'}"></div></div>
+        <div class="fb-sub" style="margin-top:3px">${pctDesp.toFixed(0)}% das entradas</div>
+      </div>
     </div>
-    <div class="fb-card">
-      <div class="fb-lbl">Saldo projetado</div>
-      <div class="fb-val" style="color:${saldoReal>=0?'var(--accent)':'var(--red)'}">${fmtR(saldoReal)}</div>
-      <div class="fb-sub">${saldoReal>=0?'positivo ✓':'atenção — negativo ⚠'}</div>
+    <div class="fb-divider"></div>
+    <div class="fb-row fb-saldo-row">
+      <div class="fb-icon" style="background:${saldoReal>=0?'rgba(201,162,39,0.12)':'rgba(240,71,71,0.1)'}">≈</div>
+      <div class="fb-info">
+        <div class="fb-lbl">Saldo projetado</div>
+        <div class="fb-val" style="color:${saldoCor};font-size:22px">${fmtR(saldoReal)}</div>
+        <div class="fb-sub" style="color:${saldoCor}">${saldoReal>=0?'✓ positivo':'⚠ negativo'}</div>
+      </div>
     </div>
   `;
 }
@@ -3273,37 +3297,63 @@ function fixaDescSel(val){
 function closeModal(){document.getElementById('ovl').classList.remove('open');}
 
 // HISTÓRICO DE STATUS DO CLIENTE
-function openHistoricoCliente(clienteId, nome){
-  const meses=Array.from({length:12},(_,i)=>addMes(mesRef,i-11)); // últimos 12 meses
-  const cli=D.clientes.find(c=>c.cliente_id===clienteId)||{};
-  const plano=cli.plano||'';
+let _histClienteId=null;
 
-  const cells=meses.map(m=>{
-    // Mês atual: busca em D.clientes
+function buildHistGrid(clienteId){
+  const meses=Array.from({length:12},(_,i)=>addMes(mesRef,i-11));
+  const LABELS={pago:'✓ Pago',pendente:'○ Pendente',inadimplente:'✗ Inadimp.',inativo:'— Inativo'};
+  const NEXT={pago:'inadimplente',inadimplente:'pendente',pendente:'pago'};
+  const CYCLE_LABEL={pago:'→ Inadimplente',inadimplente:'→ Pendente',pendente:'→ Pago'};
+
+  return meses.map(m=>{
+    let status, valor, recordId;
     if(m===mesRef){
       const cur=D.clientes.find(c=>c.cliente_id===clienteId);
-      if(!cur||!cur.ativo)return{m,status:'inativo',valor:0};
-      return{m,status:cur.status,valor:cur.valor};
+      if(!cur||!cur.ativo){status='inativo';valor=0;recordId=null;}
+      else{status=cur.status;valor=cur.valor;recordId=cur.id;}
+    } else {
+      const hist=getClienteHistMes(clienteId,m);
+      if(!hist||!hist.ativo){status='inativo';valor=hist?.valor||0;recordId=null;}
+      else{status=hist.status||'pendente';valor=+hist.valor||0;recordId=hist.id;}
     }
-    // Meses passados: busca em D.clientesAno
-    const hist=getClienteHistMes(clienteId,m);
-    if(!hist||!hist.ativo)return{m,status:'inativo',valor:hist?.valor||0};
-    return{m,status:hist.status||'pendente',valor:+hist.valor||0};
-  });
-
-  const LABELS={pago:'✓ Pago',pendente:'○ Pend.',inadimplente:'✗ Inadimp.',inativo:'— Inativo'};
-  const grid=cells.map(({m,status,valor})=>`
-    <div class="hist-mes ${status}">
+    const canClick=recordId&&status!=='inativo';
+    const clickAttr=canClick?`onclick="cycleHistStatus('${recordId}','${status}','${clienteId}')" title="${CYCLE_LABEL[status]||''}" style="cursor:pointer"`:'';
+    const hoverHint=canClick?`<div class="hist-mes-hint">${CYCLE_LABEL[status]}</div>`:'';
+    return`<div class="hist-mes ${status}${canClick?' clickable':''}" ${clickAttr}>
       <div class="hist-mes-lbl">${mesCurto(m)}</div>
       <div class="hist-mes-val">${LABELS[status]||status}</div>
       <div class="hist-mes-r">${valor>0?fmtR(valor):''}</div>
-    </div>`).join('');
+      ${hoverHint}
+    </div>`;
+  }).join('');
+}
 
+function openHistoricoCliente(clienteId, nome){
+  _histClienteId=clienteId;
+  const cli=D.clientes.find(c=>c.cliente_id===clienteId)||{};
   document.getElementById('hist-nome').textContent=nome;
-  document.getElementById('hist-sub').textContent=`${plano} · Histórico de pagamentos — últimos 12 meses`;
-  document.getElementById('hist-grid').innerHTML=grid;
+  document.getElementById('hist-sub').textContent=`${cli.plano||''} · Clique em um mês para alternar o status`;
+  document.getElementById('hist-grid').innerHTML=buildHistGrid(clienteId);
   document.getElementById('hist-ovl').classList.add('open');
 }
+
+async function cycleHistStatus(recordId, currentStatus, clienteId){
+  const next={pago:'inadimplente',inadimplente:'pendente',pendente:'pago'}[currentStatus]||'pago';
+  // Atualiza no Supabase
+  await supa.from('fin_mes_clientes').update({status:next}).eq('id',recordId);
+  // Atualiza D.clientes (mês atual)
+  const cur=D.clientes.find(x=>x.id===recordId);
+  if(cur){cur.status=next;}
+  // Atualiza D.clientesAno (meses passados)
+  const hist=D.clientesAno.find(x=>x.id===recordId);
+  if(hist){hist.status=next;}
+  // Refresh modal
+  document.getElementById('hist-grid').innerHTML=buildHistGrid(clienteId);
+  // Re-render tabela MRR sem recarregar tudo (só se for mês atual)
+  renderMMRTable();renderHeroFluxo();renderHeroMMR();
+  if(cur) await salvarSnapshot();
+}
+
 function closeHistModal(){document.getElementById('hist-ovl').classList.remove('open');}
 
 async function salvarModal(){
