@@ -140,7 +140,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 
 /* CONTENT */
 .content{flex:1;overflow-y:auto;}
-.page{display:none;padding:28px 36px;max-width:1600px;margin:0 auto;}
+.page{display:none;padding:24px 32px;width:100%;max-width:1800px;margin:0 auto;}
 .page.active{display:block;animation:fadeUp .25s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes slide-up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
@@ -241,6 +241,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 /* FLUXO BALANCE */
 .fluxo-balance{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 18px 0;}
 @media(max-width:600px){.fluxo-balance{grid-template-columns:1fr 1fr;}}
+/* Dentro da col lateral do fluxo (≤460px de largura), empilha os cards */
+#page-fluxo.active .fluxo-balance{grid-template-columns:1fr;}
 .fb-card{background:var(--bg3);border-radius:10px;padding:14px;}
 .fb-lbl{font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
 .fb-val{font-size:16px;font-weight:900;letter-spacing:-.5px;}
@@ -595,6 +597,12 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 @keyframes fadein{from{opacity:0}to{opacity:1}}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-xl) var(--r-xl) 0 0;width:100%;max-width:440px;padding:28px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.03);}
 @media(min-width:600px){.modal{border-radius:var(--r-xl);}}
+@media(min-width:1024px){
+  .ovl{align-items:center;}
+  .modal{border-radius:var(--r-xl);max-width:540px;padding:32px;}
+  .modal-title{font-size:20px;}
+  .mf-row,.mf-row3{gap:14px;}
+}
 .modal-title{font-size:18px;font-weight:700;margin-bottom:20px;letter-spacing:-.4px;}
 .mf{margin-bottom:14px;}
 .mf label{display:block;font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:5px;}
@@ -633,6 +641,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 /* SETTINGS PAGE */
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px;}
 @media(max-width:640px){.settings-grid{grid-template-columns:1fr;}}
+/* DAS card ocupa linha inteira nas grades de settings */
+.das-setting-card{grid-column:1/-1;}
 .setting-card{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:20px;transition:border-color .2s;}
 .setting-card:hover{border-color:var(--border2);}
 .setting-title{font-size:12px;font-weight:700;margin-bottom:4px;}
@@ -808,6 +818,9 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
    ═══════════════════════════════════════════════════ */
 
 @media(min-width:1024px){
+  /* Página — padding generoso */
+  .page{padding:28px 44px;}
+
   /* Settings: 3 colunas */
   .settings-grid{grid-template-columns:repeat(3,1fr);}
 
@@ -839,7 +852,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   /* ── Fluxo — balanço + calendário lado a lado ── */
   #page-fluxo.active{
     display:grid;
-    grid-template-columns:340px 1fr;
+    grid-template-columns:360px 1fr;
     gap:14px;
     align-items:start;
   }
@@ -847,23 +860,44 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   #page-fluxo.active > .sec:last-child{grid-column:1/-1;}
   #page-fluxo.active > .hero{margin-bottom:0;}
   #page-fluxo.active > .sec{margin-bottom:0;}
+
+  /* ── Hist modal — 6 colunas no desktop ── */
+  .hist-modal{max-width:680px;}
+  .hist-grid{grid-template-columns:repeat(6,1fr);}
+
+  /* ── DAS painel — 6 meses em linha ── */
+  .das-painel-grid{grid-template-columns:repeat(6,1fr);}
 }
 
 @media(min-width:1400px){
-  .page{padding:32px 56px;max-width:1900px;}
+  .page{padding:32px 60px;max-width:1900px;}
   .hero{gap:20px;}
   #page-despesas.active{gap:18px;}
-  #page-fluxo.active{grid-template-columns:380px 1fr;gap:18px;}
+  #page-fluxo.active{grid-template-columns:420px 1fr;gap:18px;}
+  .modal{max-width:580px;}
+}
+
+@media(min-width:1800px){
+  .page{padding:36px 72px;}
+  #page-fluxo.active{grid-template-columns:460px 1fr;}
 }
 
 /* ═══════════════════════════════════════════════════
    RESPONSIVE — TABLET (640px – 1023px)
    ═══════════════════════════════════════════════════ */
 @media(max-width:1023px) and (min-width:640px){
-  .page{padding:18px 20px;}
+  .page{padding:18px 24px;}
   .editores-grid{grid-template-columns:1fr 1fr;}
   .resumo-cards{grid-template-columns:repeat(3,1fr);}
   .chart-wrap{height:240px!important;}
+  /* Modal centralizado já no tablet */
+  .ovl{align-items:center;}
+  .modal{border-radius:var(--r-xl);max-width:500px;}
+  /* hist-modal grid 4 col no tablet */
+  .hist-grid{grid-template-columns:repeat(4,1fr);}
+  .hist-modal{max-width:560px;}
+  /* DAS painel 3 colunas */
+  .das-painel-grid{grid-template-columns:repeat(3,1fr);}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1178,7 +1212,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
           </div>
 
           <!-- DAS MEI -->
-          <div class="setting-card" style="grid-column:1/-1;">
+          <div class="setting-card das-setting-card">
             <div class="setting-title">🧾 DAS MEI mensal</div>
             <div class="setting-desc">Imposto fixo MEI. Gerencie o pagamento mês a mês. Padrão 2026: R$ 76,90 (serviços).</div>
             <div class="setting-input-row">
