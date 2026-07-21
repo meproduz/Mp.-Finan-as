@@ -16,6 +16,7 @@
   ALTER TABLE fin_fixas ADD COLUMN IF NOT EXISTS categoria TEXT DEFAULT 'operacional';
   ALTER TABLE fin_clientes ADD COLUMN IF NOT EXISTS encerrado BOOLEAN DEFAULT FALSE;
   ALTER TABLE fin_fixas ADD COLUMN IF NOT EXISTS dia_pagamento INT DEFAULT 5;
+  CREATE TABLE IF NOT EXISTS fin_das_mei (id BIGSERIAL PRIMARY KEY, mes_ref TEXT UNIQUE NOT NULL, valor NUMERIC DEFAULT 76.90, pago BOOLEAN DEFAULT FALSE, pago_em TIMESTAMPTZ);
 */
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -481,6 +482,46 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .btn-enc:hover{color:var(--red);border-color:rgba(240,71,71,0.25);background:rgba(240,71,71,0.06);}
 .btn-reativar{background:rgba(35,197,94,0.08);border:1px solid rgba(35,197,94,0.2);color:var(--green);border-radius:var(--r-sm);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-reativar:hover{background:rgba(35,197,94,0.14);}
+
+/* MRR % SHARE POR CLIENTE */
+.mrr-share-cell{min-width:68px;}
+.mrr-share-val{font-size:10px;font-weight:700;color:var(--text2);}
+.mrr-share-bar-bg{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:3px;}
+.mrr-share-bar-fill{height:100%;background:linear-gradient(90deg,var(--a2),var(--accent));border-radius:2px;transition:width .7s ease;}
+
+/* HISTÓRICO STATUS MODAL */
+.hist-ovl{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:9000;opacity:0;pointer-events:none;transition:opacity .22s ease;}
+.hist-ovl.open{opacity:1;pointer-events:all;}
+.hist-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-xl);padding:28px;width:100%;max-width:520px;box-shadow:0 32px 80px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.03);max-height:90vh;overflow-y:auto;}
+.hist-modal h3{font-size:16px;font-weight:700;letter-spacing:-0.3px;margin-bottom:4px;}
+.hist-modal .hist-sub{font-size:11px;color:var(--text3);margin-bottom:18px;}
+.hist-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.hist-mes{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;transition:border-color .15s;}
+.hist-mes-lbl{font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.hist-mes-val{font-size:10px;font-weight:700;margin-bottom:2px;}
+.hist-mes-r{font-size:9px;color:var(--text3);}
+.hist-mes.pago{border-color:rgba(35,197,94,0.22);background:rgba(35,197,94,0.04);}
+.hist-mes.pago .hist-mes-val{color:var(--green);}
+.hist-mes.inadimplente{border-color:rgba(240,71,71,0.22);background:rgba(240,71,71,0.04);}
+.hist-mes.inadimplente .hist-mes-val{color:var(--red);}
+.hist-mes.pendente{border-color:rgba(232,187,58,0.22);}
+.hist-mes.pendente .hist-mes-val{color:var(--yellow);}
+.hist-mes.inativo .hist-mes-val{color:var(--text4);}
+
+/* DAS MEI PAINEL */
+.das-painel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;}
+.das-mes-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;cursor:default;}
+.das-mes-card.pago{border-color:rgba(35,197,94,0.25);background:rgba(35,197,94,0.05);}
+.das-mes-card.pendente{border-color:rgba(232,187,58,0.2);background:rgba(232,187,58,0.04);}
+.das-mes-lbl{font-size:8px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.das-mes-val{font-size:12px;font-weight:800;margin-bottom:2px;}
+.das-mes-status{font-size:9px;font-weight:700;}
+.das-mes-card.pago .das-mes-status{color:var(--green);}
+.das-mes-card.pendente .das-mes-status{color:var(--yellow);}
+.das-pagar-btn{background:rgba(35,197,94,0.1);border:1px solid rgba(35,197,94,0.22);color:var(--green);border-radius:8px;padding:7px 16px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;width:100%;margin-top:10px;}
+.das-pagar-btn:hover{background:rgba(35,197,94,0.18);}
+.das-pagar-btn:disabled{opacity:.4;cursor:not-allowed;}
+.das-hero{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px;}
 
 /* CHART */
 .chart-wrap{padding:20px;position:relative;height:220px;}
@@ -1137,14 +1178,16 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
           </div>
 
           <!-- DAS MEI -->
-          <div class="setting-card">
+          <div class="setting-card" style="grid-column:1/-1;">
             <div class="setting-title">🧾 DAS MEI mensal</div>
-            <div class="setting-desc">Imposto fixo MEI descontado no cálculo do lucro real e no balanço do Fluxo de Caixa. Padrão 2026: R$ 76,90 (serviços).</div>
+            <div class="setting-desc">Imposto fixo MEI. Gerencie o pagamento mês a mês. Padrão 2026: R$ 76,90 (serviços).</div>
             <div class="setting-input-row">
               <input class="setting-input" type="text" inputmode="decimal" id="cfg-das" placeholder="76,90">
-              <button class="setting-save-btn" onclick="saveCfgDAS()">Salvar</button>
+              <button class="setting-save-btn" onclick="saveCfgDAS()">Salvar valor</button>
             </div>
             <div id="cfg-das-status" style="font-size:10px;color:var(--text2);margin-top:8px;"></div>
+            <!-- Painel de controle mensal -->
+            <div id="das-painel" class="das-painel"></div>
           </div>
 
           <!-- CONFIGURAÇÕES AVANÇADAS — colapsável -->
@@ -1416,6 +1459,26 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   </div>
 </div>
 
+<!-- MODAL HISTÓRICO DE STATUS -->
+<div class="hist-ovl" id="hist-ovl" onclick="if(event.target===this)closeHistModal()">
+  <div class="hist-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <h3 id="hist-nome">Cliente</h3>
+        <div class="hist-sub" id="hist-sub">Histórico de pagamentos — últimos 12 meses</div>
+      </div>
+      <button class="m-cancel" onclick="closeHistModal()" style="margin:0;padding:6px 12px;font-size:11px;">✕ Fechar</button>
+    </div>
+    <div class="hist-grid" id="hist-grid"></div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:12px;font-size:10px;color:var(--text3);">
+      <span><span style="color:var(--green)">■</span> Pago</span>
+      <span><span style="color:var(--yellow)">■</span> Pendente</span>
+      <span><span style="color:var(--red)">■</span> Inadimplente</span>
+      <span><span style="color:var(--text4)">■</span> Sem registro</span>
+    </div>
+  </div>
+</div>
+
 <script>
 const SU='https://rylexblaolbiovfmrwvi.supabase.co';
 const SK='sb_publishable_WW_IkaY7yE-IyDLyy6Kc6w_2tZ5MMPp';
@@ -1425,7 +1488,7 @@ const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agos
 const MESES_C=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 let mesRef=mesAtual();
-let D={clientes:[],clientesAno:[],pontuais:[],fixas:[],variaveis:[],terceiros:[],historico:[]};
+let D={clientes:[],clientesAno:[],pontuais:[],fixas:[],variaveis:[],terceiros:[],historico:[],das:[]};
 let modalTipo='';
 let chartMMR=null;
 let chartComp=null;
@@ -1554,9 +1617,10 @@ async function carregar(){
   document.getElementById('fluxo-mes-label').textContent=mesLabel(mesRef);
   const fl2=document.getElementById('fluxo-mes-label2');if(fl2)fl2.textContent=mesLabel(mesRef);
   document.getElementById('resumo-mes').textContent=mesLabel(mesRef);
-  await Promise.all([loadClientes(),loadPontuais(),loadFixas(),loadVariaveis(),loadTerceiros(),loadHistorico()]);
+  await Promise.all([loadClientes(),loadPontuais(),loadFixas(),loadVariaveis(),loadTerceiros(),loadHistorico(),loadDAS()]);
   await loadClientesAno();
   await garantirMes();
+  await garantirDASMes();
   // Restaura aba ativa salva no localStorage (persiste entre refreshes)
   const _savedTab=localStorage.getItem('mp_active_tab')||'dash';
   goTab(_savedTab);
@@ -1634,6 +1698,71 @@ async function loadHistorico(){
   const ano=anoAtual();
   const{data}=await supa.from('fin_historico_mes').select('*').gte('mes_ref',`${ano}-01`).lte('mes_ref',`${ano}-12`).order('mes_ref');
   D.historico=data||[];
+}
+
+async function loadDAS(){
+  // Últimos 12 meses de controle do DAS MEI
+  const ano=anoAtual();
+  const anoAnt=String(+ano-1);
+  const{data}=await supa.from('fin_das_mei').select('*').gte('mes_ref',`${anoAnt}-01`).order('mes_ref',{ascending:false}).limit(12);
+  D.das=data||[];
+}
+
+async function garantirDASMes(){
+  // Garante que existe um registro para o mês atual (cria se não existir)
+  const existe=D.das.find(d=>d.mes_ref===mesRef);
+  if(!existe){
+    const valor=getMEIDAS();
+    const{data}=await supa.from('fin_das_mei').upsert({mes_ref:mesRef,valor,pago:false},{onConflict:'mes_ref'}).select().single();
+    if(data)D.das.unshift(data);
+  }
+}
+
+async function marcarDASPago(mesR){
+  const ja=D.das.find(d=>d.mes_ref===mesR);
+  const novoPago=ja?!ja.pago:true;
+  const{data}=await supa.from('fin_das_mei').upsert({mes_ref:mesR,valor:getMEIDAS(),pago:novoPago,pago_em:novoPago?new Date().toISOString():null},{onConflict:'mes_ref'}).select().single();
+  if(data){
+    const idx=D.das.findIndex(d=>d.mes_ref===mesR);
+    if(idx>=0)D.das[idx]=data;else D.das.unshift(data);
+  }
+  showToast(novoPago?'✓':'↺',`DAS MEI ${novoPago?'marcado como pago':'revertido para pendente'}`,novoPago?'green':'blue',3000);
+  renderSettings();
+}
+
+function renderDASPainel(){
+  const el=document.getElementById('das-painel');
+  if(!el)return;
+  const das=getMEIDAS();
+  const meses=Array.from({length:6},(_,i)=>addMes(mesRef,i-5)); // últimos 6 meses
+  const atual=D.das.find(d=>d.mes_ref===mesRef);
+  const pagoCur=atual?.pago||false;
+
+  const grid=meses.map(m=>{
+    const rec=D.das.find(d=>d.mes_ref===m);
+    const pago=rec?.pago||false;
+    const isCur=m===mesRef;
+    const val=rec?.valor||das;
+    return`<div class="das-mes-card ${pago?'pago':'pendente'}${isCur?' cur':''}">
+      <div class="das-mes-lbl">${mesCurto(m)}${isCur?' ←':''}</div>
+      <div class="das-mes-val">${fmtR(val)}</div>
+      <div class="das-mes-status">${pago?'✓ Pago':'○ Pendente'}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`
+    <div class="das-hero">
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">DAS MEI — ${mesLabel(mesRef)}</div>
+        <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:${pagoCur?'var(--green)':'var(--yellow)'}">${fmtR(das)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">Vence todo dia 20</div>
+      </div>
+      <button class="das-pagar-btn" onclick="marcarDASPago('${mesRef}')" style="width:auto;margin:0">
+        ${pagoCur?'↺ Marcar pendente':'✓ Marcar como pago'}
+      </button>
+    </div>
+    <div class="das-painel-grid">${grid}</div>
+  `;
 }
 
 async function garantirMes(){
@@ -2181,6 +2310,7 @@ function renderMMRTable(){
       return`<th class="mc${isCur?' h-cur':''}">${mesCurto(m)}</th>`;
     }).join('')}
     <th class="mc">Média</th>
+    <th class="mrr-share-cell" title="Participação no MRR total">% MRR</th>
     <th>Status</th><th></th>
   </tr>`;
 
@@ -2246,6 +2376,13 @@ function renderMMRTable(){
 
     const media=mesesComValor>0?somaCliente/mesesComValor:0;
 
+    // % share do MRR atual
+    const mrrTotal=calcMRR();
+    const share=(!c.encerrado&&c.ativo&&mrrTotal>0)?(c.valor/mrrTotal*100):0;
+    const shareCell=share>0
+      ?`<td class="mrr-share-cell"><div class="mrr-share-val">${share.toFixed(1)}%</div><div class="mrr-share-bar-bg"><div class="mrr-share-bar-fill" style="width:${Math.min(share,100)}%"></div></div></td>`
+      :`<td class="mrr-share-cell"><span class="vc zero">—</span></td>`;
+
     const isEnc=c.encerrado;
     const showEnc2=localStorage.getItem('mp_show_enc')==='1';
     const hiddenStyle=isEnc&&!showEnc2?'display:none':'';
@@ -2253,6 +2390,7 @@ function renderMMRTable(){
       ${clienteCell}
       ${mesesCells}
       <td><span class="vc" style="color:var(--text3)">${fmtR(media)}</span></td>
+      ${shareCell}
       <td style="padding:8px 10px;">${isEnc?`<span class="badge-enc">Encerrado</span>`:`
         <span class="sp sp-${c.status}" onclick="cycleStatus('${c.id}','${c.status}')" title="Clique para alternar status">
           ${{pago:'Pago',pendente:'Pendente',inadimplente:'Inadimp.'}[c.status]||c.status}
@@ -2261,6 +2399,7 @@ function renderMMRTable(){
       <td style="padding:8px 8px;">
         <div class="actions-cell">
           <button class="edit-btn" onclick="editarCliente('${c.cliente_id}')" title="Editar">✎</button>
+          <button class="edit-btn" onclick="openHistoricoCliente('${c.cliente_id}','${c.nome}')" title="Ver histórico de status" style="color:var(--text3)">📊</button>
           ${isEnc?`<button class="edit-btn" onclick="encerrarCliente('${c.cliente_id}',true)" title="Reativar cliente" style="color:var(--green)">↺</button>`:`<button class="del-btn" onclick="delCliente('${c.id}')" title="Remover">✕</button>`}
         </div>
       </td>
@@ -2283,7 +2422,7 @@ function renderMMRTable(){
   const somaFim=`<td><span class="sum-val gold">${fmtR(mediaAnual)}</span></td>`;
 
   document.getElementById('mmr-tbody').innerHTML=rows+
-    `<tr class="sum-row">${somaLabel}${somaCells}${somaFim}<td></td><td></td></tr>`;
+    `<tr class="sum-row">${somaLabel}${somaCells}${somaFim}<td></td><td></td><td></td></tr>`;
 }
 
 function renderChart(){
@@ -3099,6 +3238,40 @@ function fixaDescSel(val){
 
 function closeModal(){document.getElementById('ovl').classList.remove('open');}
 
+// HISTÓRICO DE STATUS DO CLIENTE
+function openHistoricoCliente(clienteId, nome){
+  const meses=Array.from({length:12},(_,i)=>addMes(mesRef,i-11)); // últimos 12 meses
+  const cli=D.clientes.find(c=>c.cliente_id===clienteId)||{};
+  const plano=cli.plano||'';
+
+  const cells=meses.map(m=>{
+    // Mês atual: busca em D.clientes
+    if(m===mesRef){
+      const cur=D.clientes.find(c=>c.cliente_id===clienteId);
+      if(!cur||!cur.ativo)return{m,status:'inativo',valor:0};
+      return{m,status:cur.status,valor:cur.valor};
+    }
+    // Meses passados: busca em D.clientesAno
+    const hist=getClienteHistMes(clienteId,m);
+    if(!hist||!hist.ativo)return{m,status:'inativo',valor:hist?.valor||0};
+    return{m,status:hist.status||'pendente',valor:+hist.valor||0};
+  });
+
+  const LABELS={pago:'✓ Pago',pendente:'○ Pend.',inadimplente:'✗ Inadimp.',inativo:'— Inativo'};
+  const grid=cells.map(({m,status,valor})=>`
+    <div class="hist-mes ${status}">
+      <div class="hist-mes-lbl">${mesCurto(m)}</div>
+      <div class="hist-mes-val">${LABELS[status]||status}</div>
+      <div class="hist-mes-r">${valor>0?fmtR(valor):''}</div>
+    </div>`).join('');
+
+  document.getElementById('hist-nome').textContent=nome;
+  document.getElementById('hist-sub').textContent=`${plano} · Histórico de pagamentos — últimos 12 meses`;
+  document.getElementById('hist-grid').innerHTML=grid;
+  document.getElementById('hist-ovl').classList.add('open');
+}
+function closeHistModal(){document.getElementById('hist-ovl').classList.remove('open');}
+
 async function salvarModal(){
   const btn=document.getElementById('m-save');btn.textContent='Salvando...';
   try{
@@ -3305,6 +3478,8 @@ function renderSettings(){
   const stDas=document.getElementById('cfg-das-status');
   if(stMeta)stMeta.textContent=`Atual: ${fmtR(getMeta())} / mês`;
   if(stDas)stDas.textContent=`Atual: ${fmtR(getMEIDAS())} / mês`;
+  // Painel DAS MEI
+  renderDASPainel();
 }
 function saveCfgMeta(){
   const v=parseVal(document.getElementById('cfg-meta').value)||60000;
