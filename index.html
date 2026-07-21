@@ -239,17 +239,23 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .proj-atual-row td{background:rgba(207,145,15,0.05);font-weight:700;}
 
 /* FLUXO BALANCE */
-.fluxo-balance{display:flex;flex-direction:column;gap:0;padding:16px 18px;}
-.fb-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;}
-.fb-saldo-row{padding-top:16px;}
-.fb-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text2);flex-shrink:0;margin-top:2px;}
+.fluxo-balance{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding:0;}
+.fb-row{display:flex;align-items:center;gap:14px;padding:18px 22px;position:relative;}
+.fb-row+.fb-row::before{content:'';position:absolute;left:0;top:16px;bottom:16px;width:1px;background:var(--border);}
+.fb-saldo-row{}
+.fb-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--text2);flex-shrink:0;}
 .fb-info{flex:1;min-width:0;}
 .fb-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
-.fb-val{font-size:18px;font-weight:900;letter-spacing:-.5px;line-height:1.1;}
+.fb-val{font-size:20px;font-weight:900;letter-spacing:-.5px;line-height:1.1;}
 .fb-sub{font-size:9px;color:var(--text3);margin-top:2px;}
-.fb-divider{height:1px;background:var(--border);margin:0 0;}
+.fb-divider{display:none;}
 .fb-bar-bg{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:6px;}
 .fb-bar-fill{height:100%;border-radius:2px;transition:width .7s ease;}
+@media(max-width:600px){
+  .fluxo-balance{grid-template-columns:1fr;}
+  .fb-row+.fb-row::before{top:0;bottom:auto;left:16px;right:16px;width:auto;height:1px;}
+  .fb-val{font-size:15px;}
+}
 
 /* SECTION */
 .sec{background:linear-gradient(150deg,#111118 0%,#0E0E1A 100%);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;position:relative;box-shadow:0 8px 36px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.03);}
@@ -845,50 +851,25 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   /* Chart maior no desktop */
   .chart-wrap{height:300px!important;}
 
-  /* ── Despesas — fixas + variáveis lado a lado ── */
-  #page-despesas.active{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    align-items:start;
-  }
-  #page-despesas.active > :first-child,
-  #page-despesas.active > .sec:nth-child(4),
-  #page-despesas.active > .sec:nth-child(5){grid-column:1/-1;}
-  #page-despesas.active > .hero{margin-bottom:0;}
-  #page-despesas.active > .sec{margin-bottom:0;}
-
-  /* ── Fluxo — balanço + calendário lado a lado ── */
-  #page-fluxo.active{
-    display:grid;
-    grid-template-columns:360px 1fr;
-    gap:14px;
-    align-items:start;
-  }
-  #page-fluxo.active > :first-child,
-  #page-fluxo.active > .sec:last-child{grid-column:1/-1;}
-  #page-fluxo.active > .hero{margin-bottom:0;}
-  #page-fluxo.active > .sec{margin-bottom:0;}
-
   /* ── Hist modal — 6 colunas no desktop ── */
   .hist-modal{max-width:680px;}
   .hist-grid{grid-template-columns:repeat(6,1fr);}
 
   /* ── DAS painel — 6 meses em linha ── */
   .das-painel-grid{grid-template-columns:repeat(6,1fr);}
+
+  /* ── Despesas: todas as seções full-width empilhadas — sem grid de colunas ── */
+  /* (layout de grade lateral causava vão morto quando variáveis tinha poucos itens) */
 }
 
 @media(min-width:1400px){
   .page{padding:32px 60px;max-width:1900px;}
   .hero{gap:20px;}
-  #page-despesas.active{gap:18px;}
-  #page-fluxo.active{grid-template-columns:420px 1fr;gap:18px;}
   .modal{max-width:580px;}
 }
 
 @media(min-width:1800px){
   .page{padding:36px 72px;}
-  #page-fluxo.active{grid-template-columns:460px 1fr;}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1127,13 +1108,14 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
     <div class="page" id="page-fluxo">
       <div class="hero" id="hero-fluxo"></div>
       <div class="sec" style="margin-bottom:12px;">
-        <div class="sec-hd"><span class="sec-title">Balanço do mês — <span id="fluxo-mes-label2" style="color:var(--accent)">—</span></span></div>
+        <div class="sec-hd" style="border-bottom:none;padding-bottom:0;">
+          <span class="sec-title">Balanço — <span id="fluxo-mes-label2" style="color:var(--accent)">—</span></span>
+        </div>
         <div class="fluxo-balance" id="fluxo-balance"></div>
-        <div style="height:14px"></div>
       </div>
       <div class="sec">
         <div class="sec-hd">
-          <span class="sec-title">Entradas previstas — <span id="fluxo-mes-label" style="color:var(--accent)">—</span></span>
+          <span class="sec-title">Fluxo semanal — <span id="fluxo-mes-label" style="color:var(--accent)">—</span></span>
           <span class="sec-total-g" id="fluxo-total">R$ 0</span>
         </div>
         <div class="fluxo-semanas" id="fluxo-semanas"></div>
@@ -1881,30 +1863,27 @@ function renderFluxoBalance(){
 
   el.innerHTML=`
     <div class="fb-row">
-      <div class="fb-icon" style="background:rgba(35,197,94,0.12)">↑</div>
+      <div class="fb-icon" style="background:rgba(35,197,94,0.12);color:var(--green)">↑</div>
       <div class="fb-info">
-        <div class="fb-lbl">Entradas</div>
+        <div class="fb-lbl">Entradas previstas</div>
         <div class="fb-val" style="color:var(--green)">${fmtR(entradas)}</div>
         <div class="fb-sub">MRR + pontuais</div>
       </div>
     </div>
-    <div class="fb-divider"></div>
     <div class="fb-row">
-      <div class="fb-icon" style="background:rgba(240,71,71,0.1)">↓</div>
+      <div class="fb-icon" style="background:rgba(240,71,71,0.1);color:var(--red)">↓</div>
       <div class="fb-info">
-        <div class="fb-lbl">Saídas</div>
+        <div class="fb-lbl">Saídas previstas</div>
         <div class="fb-val" style="color:var(--red)">${fmtR(saidas+das)}</div>
-        <div class="fb-sub">fixas + variáveis + DAS MEI</div>
-        <div class="fb-bar-bg"><div class="fb-bar-fill" style="width:${pctDesp.toFixed(1)}%;background:${pctDesp>80?'var(--red)':pctDesp>60?'var(--yellow)':'var(--green)'}"></div></div>
+        <div class="fb-bar-bg" style="margin-top:6px"><div class="fb-bar-fill" style="width:${pctDesp.toFixed(1)}%;background:${pctDesp>80?'var(--red)':pctDesp>60?'var(--yellow)':'var(--green)'}"></div></div>
         <div class="fb-sub" style="margin-top:3px">${pctDesp.toFixed(0)}% das entradas</div>
       </div>
     </div>
-    <div class="fb-divider"></div>
     <div class="fb-row fb-saldo-row">
-      <div class="fb-icon" style="background:${saldoReal>=0?'rgba(201,162,39,0.12)':'rgba(240,71,71,0.1)'}">≈</div>
+      <div class="fb-icon" style="background:${saldoReal>=0?'rgba(201,162,39,0.12)':'rgba(240,71,71,0.1)'};color:${saldoCor}">≈</div>
       <div class="fb-info">
         <div class="fb-lbl">Saldo projetado</div>
-        <div class="fb-val" style="color:${saldoCor};font-size:22px">${fmtR(saldoReal)}</div>
+        <div class="fb-val" style="color:${saldoCor}">${fmtR(saldoReal)}</div>
         <div class="fb-sub" style="color:${saldoCor}">${saldoReal>=0?'✓ positivo':'⚠ negativo'}</div>
       </div>
     </div>
