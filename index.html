@@ -1245,6 +1245,17 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
               <button class="setting-save-btn" onclick="saveCfgDAS()">Salvar valor</button>
             </div>
             <div id="cfg-das-status" style="font-size:10px;color:var(--text2);margin-top:8px;"></div>
+
+          </div>
+          <div class="setting-item">
+            <div class="setting-title">💰 Caixa atual (saldo real)</div>
+            <div class="setting-desc">Informe o saldo real da conta bancária. Usado no cálculo do Runway. Deixe em branco para usar o valor calculado pelo histórico.</div>
+            <div class="setting-input-row">
+              <input class="setting-input" type="text" inputmode="decimal" id="cfg-caixa" placeholder="0,00">
+              <button class="setting-save-btn" onclick="saveCfgCaixa()">Salvar</button>
+              <button class="setting-save-btn" onclick="clearCfgCaixa()" style="background:var(--bg4);color:var(--text2);border:1px solid var(--border2);box-shadow:none;" title="Voltar para valor calculado">✕ Limpar</button>
+            </div>
+            <div id="cfg-caixa-status" style="font-size:10px;color:var(--text2);margin-top:8px;"></div>
             <!-- Painel de controle mensal -->
             <div id="das-painel" class="das-painel"></div>
           </div>
@@ -1580,11 +1591,19 @@ function mesCurto(ym){const[y,m]=ym.split('-');return`${MESES_C[+m-1]}/${String(
 function addMes(ym,n){const[y,m]=ym.split('-').map(Number);const d=new Date(y,m-1+n,1);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
 function anoAtual(){return mesRef.split('-')[0];}
 
-// META MRR + MEI DAS
+// META MRR + MEI DAS + CAIXA REAL
 function getMeta(){return+(localStorage.getItem('mp_meta_mrr')||60000);}
 function setMeta(v){localStorage.setItem('mp_meta_mrr',v);}
 function getMEIDAS(){return+(localStorage.getItem('mp_mei_das')||76.90);}
 function setMEIDAS(v){localStorage.setItem('mp_mei_das',v);}
+function getCaixaReal(){
+  const v=localStorage.getItem('mp_caixa_real');
+  return v!==null?+v:null; // null = não definido (usa calculado)
+}
+function setCaixaReal(v){
+  if(v===null||v===''||isNaN(v))localStorage.removeItem('mp_caixa_real');
+  else localStorage.setItem('mp_caixa_real',v);
+}
 
 // HELPERS
 function calcMesesEntre(m1,m2){
@@ -1604,7 +1623,8 @@ function calcMRRProjetado(mes){
 // BUSINESS INTELLIGENCE
 function calcRunway(){
   /* Meses de sobrevivência com caixa atual sem nenhuma entrada nova */
-  const caixa=calcCaixa();
+  const caixaManual=getCaixaReal();
+  const caixa=caixaManual!==null?caixaManual:calcCaixa();
   if(caixa<=0)return 0;
   const despMes=calcDesp()+getMEIDAS();
   if(despMes<=0)return 99;
@@ -2282,6 +2302,12 @@ function renderBICards(){
   // Churn
   const churnClr=churn===0?'var(--green)':churn<=20?'var(--yellow)':'var(--red)';
 
+  const caixaManual=getCaixaReal();
+  const caixaExibida=caixaManual!==null?caixaManual:calcCaixa();
+  const caixaBadge=caixaManual!==null
+    ?`<span class="db-pill" style="background:rgba(201,162,39,0.1);color:var(--accent);margin-left:4px">manual</span>`
+    :`<span class="db-pill" style="background:rgba(255,255,255,0.04);color:var(--text3);margin-left:4px">calculado</span>`;
+
   return`
   <div class="db-card db-runway">
     <span class="db-label">Runway do caixa</span>
@@ -2290,7 +2316,10 @@ function renderBICards(){
       <span style="font-size:11px;color:${runwayClr};font-weight:700">${runwayIcon}</span>
     </div>
     <div style="font-size:9px;color:var(--text3);margin-bottom:8px">${runwayTip}</div>
-    <div class="db-meta"><span class="db-pill" style="background:rgba(255,255,255,0.04);color:var(--text3)">${fmtR(calcCaixa())} em caixa</span></div>
+    <div class="db-meta">
+      <span class="db-pill" style="background:rgba(255,255,255,0.04);color:var(--text2)">${fmtR(caixaExibida)} em caixa</span>
+      ${caixaBadge}
+    </div>
   </div>
 
   <div class="db-card db-breakeven">
@@ -3705,13 +3734,21 @@ function goTab(id){
 function renderSettings(){
   const cfgMeta=document.getElementById('cfg-meta');
   const cfgDas=document.getElementById('cfg-das');
+  const cfgCaixa=document.getElementById('cfg-caixa');
   if(cfgMeta&&!cfgMeta.value)cfgMeta.value=getMeta();
   if(cfgDas&&!cfgDas.value)cfgDas.value=getMEIDAS();
   // Atualiza status atual
   const stMeta=document.getElementById('cfg-meta-status');
   const stDas=document.getElementById('cfg-das-status');
+  const stCaixa=document.getElementById('cfg-caixa-status');
   if(stMeta)stMeta.textContent=`Atual: ${fmtR(getMeta())} / mês`;
   if(stDas)stDas.textContent=`Atual: ${fmtR(getMEIDAS())} / mês`;
+  const caixaReal=getCaixaReal();
+  if(cfgCaixa&&!cfgCaixa.value&&caixaReal!==null)cfgCaixa.value=caixaReal;
+  if(stCaixa){
+    if(caixaReal!==null)stCaixa.textContent=`Usando valor manual: ${fmtR(caixaReal)} · Runway calculado com esse saldo`;
+    else stCaixa.textContent=`Usando valor calculado: ${fmtR(calcCaixa())} (soma histórico de lucros)`;
+  }
   // Painel DAS MEI
   renderDASPainel();
 }
@@ -3727,6 +3764,22 @@ function saveCfgDAS(){
   setMEIDAS(v);
   const st=document.getElementById('cfg-das-status');
   if(st){st.textContent='✓ Salvo — '+fmtR(v)+'/mês';st.style.color='var(--green)';}
+  renderTudo();
+}
+function saveCfgCaixa(){
+  const raw=document.getElementById('cfg-caixa').value;
+  const v=parseVal(raw);
+  setCaixaReal(v);
+  const st=document.getElementById('cfg-caixa-status');
+  if(st){st.textContent=`✓ Caixa real salvo: ${fmtR(v)} · Runway atualizado`;st.style.color='var(--green)';}
+  renderTudo();
+}
+function clearCfgCaixa(){
+  setCaixaReal(null);
+  const inp=document.getElementById('cfg-caixa');
+  if(inp)inp.value='';
+  const st=document.getElementById('cfg-caixa-status');
+  if(st){st.textContent=`Voltou para valor calculado: ${fmtR(calcCaixa())}`;st.style.color='var(--text2)';}
   renderTudo();
 }
 
