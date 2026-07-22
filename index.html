@@ -1263,6 +1263,13 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
               <div id="fix2026-status" style="font-size:11px;margin-top:8px;color:var(--text2);white-space:pre-line;"></div>
 
               <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:14px;">
+                <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">↩ Reimportar cliente encerrado</div>
+                <div style="font-size:10px;color:var(--text2);margin-bottom:10px;line-height:1.6;">Recria a <strong>Kronos</strong> com todo o histórico correto (Jan/25=R$1.999,99 · Fev/25=inativo · Mar–Ago/25=R$700) e marca como encerrada. Seguro — não apaga nada.</div>
+                <button class="seed-btn" id="kronos-btn" onclick="reimportarKronos()" style="border-color:rgba(201,162,39,0.3);color:var(--text2);">↩ Reimportar Kronos (encerrada)</button>
+                <div id="kronos-status" style="font-size:11px;margin-top:8px;color:var(--text2);white-space:pre-line;"></div>
+              </div>
+
+              <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:14px;">
                 <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px;">⚠ Reset total — apaga tudo</div>
                 <div style="font-size:10px;color:var(--text2);margin-bottom:10px;">Remove absolutamente todos os clientes e registros. Use só se os dados estiverem completamente corrompidos.</div>
                 <button class="seed-btn" id="reset-btn" onclick="resetEReimportar()" style="border-color:var(--red-border);color:var(--red);">🗑 Apagar tudo e reimportar do zero</button>
@@ -3849,6 +3856,65 @@ async function corrigirDados2026(){
   status.textContent+=`\n✅ ${ok}/10 corrigidos.`;
   status.style.color='var(--green)';
   if(ok>0)await carregar();
+}
+
+// REIMPORTAR KRONOS (cliente encerrado)
+async function reimportarKronos(){
+  const btn=document.getElementById('kronos-btn');
+  const status=document.getElementById('kronos-status');
+  btn.disabled=true;btn.textContent='Importando...';
+  status.style.color='var(--text2)';status.textContent='';
+
+  try{
+    // 1. Verifica se já existe
+    const{data:existe}=await supa.from('fin_clientes').select('id,nome').ilike('nome','%Kronos%').maybeSingle();
+    if(existe){
+      status.textContent=`⚠ Kronos já existe no banco (id: ${existe.id}).\nSe quiser recriar, remova manualmente primeiro.`;
+      status.style.color='var(--yellow)';
+      btn.disabled=false;btn.textContent='↩ Reimportar Kronos (encerrada)';
+      return;
+    }
+
+    // 2. Cria o cliente base marcado como encerrado
+    const{data:cl,error:errCl}=await supa.from('fin_clientes').insert({
+      nome:'Kronos',
+      plano:'Só tráfego',
+      valor_padrao:700,
+      dia_vencimento:30,
+      ativo_padrao:true,
+      videos_mes:1,
+      duracao_meses:8,
+      data_inicio:'2025-01',
+      encerrado:true
+    }).select().single();
+    if(errCl)throw errCl;
+    status.textContent='✓ Cliente criado\n';
+
+    // 3. Popula os 8 meses com os valores reais
+    const meses=[
+      {mes_ref:'2025-01',ativo:true, valor:1999.99,status:'pendente'}, // Jan: vídeos
+      {mes_ref:'2025-02',ativo:false,valor:0,      status:'pendente'}, // Fev: inativo
+      {mes_ref:'2025-03',ativo:true, valor:700,    status:'pendente'}, // Mar–Ago: tráfego
+      {mes_ref:'2025-04',ativo:true, valor:700,    status:'pendente'},
+      {mes_ref:'2025-05',ativo:true, valor:700,    status:'pendente'},
+      {mes_ref:'2025-06',ativo:true, valor:700,    status:'pendente'},
+      {mes_ref:'2025-07',ativo:true, valor:700,    status:'pendente'},
+      {mes_ref:'2025-08',ativo:true, valor:700,    status:'pendente'},
+    ].map(r=>({...r,cliente_id:cl.id}));
+
+    const{error:errM}=await supa.from('fin_mes_clientes').insert(meses);
+    if(errM)throw errM;
+    status.textContent+='✓ 8 meses inseridos (Jan–Ago/25)\n';
+    status.textContent+='✅ Kronos reimportada com sucesso!\n(aparece como encerrada na tabela MRR)';
+    status.style.color='var(--green)';
+
+    await carregar();
+  }catch(e){
+    status.textContent='✗ Erro: '+e.message;
+    status.style.color='var(--red)';
+  }
+
+  btn.disabled=false;btn.textContent='↩ Reimportar Kronos (encerrada)';
 }
 
 // RESET + REIMPORTAR
