@@ -500,6 +500,25 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .mrr-share-bar-bg{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:3px;}
 .mrr-share-bar-fill{height:100%;background:linear-gradient(90deg,var(--a2),var(--accent));border-radius:2px;transition:width .7s ease;}
 
+/* LTV COLUMN */
+.ltv-col{min-width:100px;}
+.ltv-val{font-size:11px;font-weight:700;color:var(--text2);}
+.ltv-sub{font-size:9px;color:var(--text3);margin-top:2px;}
+
+/* PREVISÃO 3 MESES */
+.prev3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.prev3-card{background:linear-gradient(145deg,#0E0E18,#0A0A13);border:1px solid rgba(255,255,255,0.055);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;}
+.prev3-card::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);}
+.prev3-mes{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;color:var(--text3);margin-bottom:10px;}
+.prev3-mrr{font-size:18px;font-weight:900;letter-spacing:-0.8px;line-height:1;margin-bottom:4px;}
+.prev3-row{display:flex;align-items:center;justify-content:space-between;font-size:9px;margin-top:6px;}
+.prev3-lbl{color:var(--text3);}
+.prev3-val{font-weight:700;}
+.prev3-bar{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:8px;}
+.prev3-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--a2),var(--accent));transition:width .8s ease;}
+.prev3-saldo-chip{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:8px;}
+@media(max-width:639px){.prev3-grid{grid-template-columns:1fr;}}
+
 /* HISTÓRICO STATUS MODAL */
 .hist-ovl{position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:9000;opacity:0;pointer-events:none;transition:opacity .22s ease;}
 .hist-ovl.open{opacity:1;pointer-events:all;}
@@ -757,10 +776,14 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 /* Grid areas */
 .db-mrr    {grid-column:1/3;grid-row:1;}
 .db-lucro  {grid-column:3;grid-row:1;}
-.db-pending{grid-column:4;grid-row:1/3;}
+.db-pending{grid-column:4;grid-row:1/4;}
 .db-recebido{grid-column:1;grid-row:2;}
 .db-areceber{grid-column:2;grid-row:2;}
 .db-inadimp {grid-column:3;grid-row:2;}
+/* BI row */
+.db-runway    {grid-column:1;grid-row:3;}
+.db-breakeven {grid-column:2;grid-row:3;}
+.db-churn     {grid-column:3;grid-row:3;}
 
 /* Tipografia dos cards */
 .db-label{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;color:var(--text3);margin-bottom:12px;display:block;}
@@ -814,6 +837,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   .db-recebido{grid-column:1;grid-row:auto;}
   .db-areceber{grid-column:2;grid-row:auto;}
   .db-pending{grid-column:1/-1;grid-row:auto;max-height:220px;}
+  .db-runway{grid-column:1/-1;grid-row:auto;}
+  .db-breakeven,.db-churn{grid-column:span 1;grid-row:auto;}
   .db-value{font-size:22px;letter-spacing:-1px;}
   .db-value.sm{font-size:18px;}
   .db-card{padding:13px 14px;}
@@ -825,6 +850,9 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   .db-pending{grid-column:1/-1;grid-row:auto;max-height:200px;}
   .db-lucro,.db-recebido{grid-column:1;grid-row:auto;}
   .db-areceber,.db-inadimp{grid-column:2;grid-row:auto;}
+  .db-runway{grid-column:1/-1;grid-row:auto;}
+  .db-breakeven,.db-churn{grid-column:1;grid-row:auto;}
+  .db-breakeven{grid-column:1;}.db-churn{grid-column:2;}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1119,6 +1147,12 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
           <span class="sec-total-g" id="fluxo-total">R$ 0</span>
         </div>
         <div class="fluxo-semanas" id="fluxo-semanas"></div>
+      </div>
+      <div class="sec">
+        <div class="sec-hd">
+          <span class="sec-title">Previsão de caixa — próximos 3 meses</span>
+        </div>
+        <div class="prev3-grid" id="prev3-grid"></div>
       </div>
       <div class="sec">
         <div class="sec-hd">
@@ -1567,6 +1601,37 @@ function calcMRRProjetado(mes){
   }).reduce((a,c)=>a+c.valor,0);
 }
 
+// BUSINESS INTELLIGENCE
+function calcRunway(){
+  /* Meses de sobrevivência com caixa atual sem nenhuma entrada nova */
+  const caixa=calcCaixa();
+  if(caixa<=0)return 0;
+  const despMes=calcDesp()+getMEIDAS();
+  if(despMes<=0)return 99;
+  return+(caixa/despMes).toFixed(1);
+}
+function calcBreakEven(){
+  /* MRR mínimo para cobrir todas as despesas fixas + DAS */
+  return calcDesp()+getMEIDAS();
+}
+function calcChurn(){
+  /* % de clientes encerrados sobre o total já cadastrado */
+  const total=D.clientes.length+(D.clientes.filter(c=>c.encerrado).length>0?0:0);
+  if(total===0)return 0;
+  const enc=D.clientes.filter(c=>c.encerrado).length;
+  return+(enc/total*100).toFixed(1);
+}
+function calcLTV(clienteId){
+  /* Lifetime Value: soma histórica de receita do cliente */
+  const hist=D.clientesAno.filter(r=>r.cliente_id===clienteId&&r.ativo&&+r.valor>0);
+  const cur=D.clientes.find(c=>c.cliente_id===clienteId);
+  let totalVal=hist.reduce((a,r)=>a+(+r.valor||0),0);
+  let totalMes=hist.length;
+  // Inclui mês atual se não estiver em clientesAno
+  if(cur&&cur.ativo&&!hist.find(r=>r.mes_ref===mesRef)){totalVal+=cur.valor;totalMes++;}
+  return{meses:totalMes,ticket:totalMes>0?totalVal/totalMes:0,total:totalVal};
+}
+
 // AUTH
 async function checkAuth(){
   const{data:{session}}=await supa.auth.getSession();
@@ -1926,10 +1991,50 @@ function getClienteHistMes(clienteId,mes){
   return D.clientesAno.find(x=>x.cliente_id===clienteId&&x.mes_ref===mes);
 }
 
+function renderPrevisao3Meses(){
+  const el=document.getElementById('prev3-grid');
+  if(!el)return;
+  const despFixa=calcDesp()+getMEIDAS();
+  const cards=Array.from({length:3},(_,i)=>{
+    const m=addMes(mesRef,i+1);
+    const mrrProj=calcMRRProjetado(m);
+    const saldo=mrrProj-despFixa;
+    const saldoClr=saldo>=0?'var(--green)':'var(--red)';
+    const pct=despFixa>0?Math.min(mrrProj/despFixa*100,200):100;
+    const barClr=pct>=100?'var(--green)':pct>=70?'var(--yellow)':'var(--red)';
+    // Contratos que vencem neste mês
+    const vencendo=D.clientes.filter(c=>{
+      if(!c.ativo||!c.duracao_meses||!c.data_inicio)return false;
+      return addMes(c.data_inicio,c.duracao_meses-1)===m;
+    });
+    const vencStr=vencendo.length
+      ?`<div style="font-size:9px;color:var(--red);font-weight:600;margin-top:8px">⚠ Contratos vencendo: ${vencendo.map(c=>c.nome).join(', ')}</div>`
+      :'';
+    return`<div class="prev3-card">
+      <div class="prev3-mes">${mesLabel(m)}</div>
+      <div class="prev3-mrr" style="color:${mrrProj>0?'var(--accent)':'var(--text3)'}">${fmtR(mrrProj)}</div>
+      <div class="prev3-bar"><div class="prev3-bar-fill" style="width:${Math.min(pct,100).toFixed(1)}%;background:${barClr}"></div></div>
+      <div class="prev3-row">
+        <span class="prev3-lbl">Despesas fixas</span>
+        <span class="prev3-val" style="color:var(--text2)">${fmtR(despFixa)}</span>
+      </div>
+      <div class="prev3-row">
+        <span class="prev3-lbl">Saldo projetado</span>
+        <span class="prev3-val" style="color:${saldoClr}">${saldo>=0?'+':''}${fmtR(saldo)}</span>
+      </div>
+      <span class="prev3-saldo-chip" style="background:${saldo>=0?'rgba(35,197,94,0.1)':'rgba(240,71,71,0.1)'};color:${saldoClr}">
+        ${saldo>=0?'✓ Positivo':'⚠ Negativo'}
+      </span>
+      ${vencStr}
+    </div>`;
+  });
+  el.innerHTML=cards.join('');
+}
+
 // RENDER TUDO
 function renderTudo(){
   renderDashBento();renderHeroMMR();renderHeroOperacional();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
-  renderFluxoBalance();renderFluxo();renderPontuais();
+  renderFluxoBalance();renderPrevisao3Meses();renderFluxo();renderPontuais();
   renderFixas();renderVariaveis();renderTerceiros();renderEditores();renderHeroDesp();
   renderResumo();renderComparativo();renderMargemClientes();renderHeroFluxo();
   renderSettings();
@@ -2147,10 +2252,62 @@ function renderDashBento(){
     <span class="db-label">Inadimplência</span>
     <span class="db-value sm" style="color:${inadClr}">${inadimp>0?fmtR(inadimp):'R$ 0'}</span>
     <div class="db-meta"><span class="db-pill" style="background:${inadims>0?'rgba(240,71,71,0.08)':'rgba(255,255,255,0.04)'};color:var(--text3)">${inadims} cliente${inadims!==1?'s':''}</span></div>
-  </div>`;
+  </div>
+
+  ${renderBICards()}`;
 
   // Atualiza label da aba MRR
   const lbl=document.getElementById('mrr-total-label');if(lbl)lbl.textContent=fmtR(mrr);
+}
+
+function renderBICards(){
+  const runway=calcRunway();
+  const breakeven=calcBreakEven();
+  const mrr=calcMRR();
+  const churn=calcChurn();
+  const clTotal=D.clientes.length;
+  const clEnc=D.clientes.filter(c=>c.encerrado).length;
+
+  // Runway color
+  const runwayClr=runway>=6?'var(--green)':runway>=3?'var(--yellow)':'var(--red)';
+  const runwayIcon=runway>=6?'✓':runway>=3?'⚠':'⛔';
+  const runwayTip=runway>=6?'Caixa saudável':runway>=3?'Atenção: reforce a captação':'Caixa crítico — capte agora';
+
+  // Break-even
+  const gapBE=mrr-breakeven;
+  const beClr=gapBE>=0?'var(--green)':'var(--red)';
+  const bePct=breakeven>0?Math.min(mrr/breakeven*100,200):100;
+  const beStatus=gapBE>=0?`+${fmtR(gapBE)} acima do BE`:`${fmtR(Math.abs(gapBE))} abaixo do BE`;
+
+  // Churn
+  const churnClr=churn===0?'var(--green)':churn<=20?'var(--yellow)':'var(--red)';
+
+  return`
+  <div class="db-card db-runway">
+    <span class="db-label">Runway do caixa</span>
+    <div style="display:flex;align-items:baseline;gap:6px;margin:10px 0 4px;">
+      <span class="db-value sm" style="color:${runwayClr}">${runway<99?runway+'m':'∞'}</span>
+      <span style="font-size:11px;color:${runwayClr};font-weight:700">${runwayIcon}</span>
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-bottom:8px">${runwayTip}</div>
+    <div class="db-meta"><span class="db-pill" style="background:rgba(255,255,255,0.04);color:var(--text3)">${fmtR(calcCaixa())} em caixa</span></div>
+  </div>
+
+  <div class="db-card db-breakeven">
+    <span class="db-label">Break-even</span>
+    <span class="db-value sm" style="color:${beClr}">${fmtR(breakeven)}</span>
+    <div class="db-progress" style="margin-top:10px"><div class="db-progress-fill" style="width:${bePct.toFixed(1)}%;background:${beClr}"></div></div>
+    <div class="db-progress-lbl"><span>MRR mínimo</span><span style="color:${beClr};font-weight:700">${beStatus}</span></div>
+  </div>
+
+  <div class="db-card db-churn">
+    <span class="db-label">Taxa de churn</span>
+    <span class="db-value sm" style="color:${churnClr}">${churn}%</span>
+    <div class="db-meta">
+      <span class="db-pill" style="background:rgba(255,255,255,0.04);color:var(--text3)">${clEnc} encerrado${clEnc!==1?'s':''} / ${clTotal} total</span>
+    </div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px">${churn===0?'Nenhum cliente perdido':'Clientes que saíram da base'}</div>
+  </div>`;
 }
 
 function calcCapacidade(){
@@ -2197,6 +2354,13 @@ function getAlerts(){
   if(calcCustoFixoPct()>60)red.push({icon:'💸',txt:'Custo fixo acima de 60% do MRR — risco operacional'});
   const inad=D.clientes.filter(c=>c.ativo&&c.status==='inadimplente');
   if(inad.length>0)red.push({icon:'🚨',txt:`Inadimplência de ${fmtR(calcInadimplencia())} — ${inad.map(c=>c.nome).join(', ')}`});
+  // Alerta de concentração de receita
+  const mrrT=calcMRR();
+  D.clientes.filter(c=>c.ativo&&!c.encerrado&&mrrT>0).forEach(c=>{
+    const share=c.valor/mrrT*100;
+    if(share>=40)red.push({icon:'🔴',txt:`${c.nome} representa ${share.toFixed(0)}% do MRR — concentração crítica de receita`});
+    else if(share>=30)yellow.push({icon:'⚠',txt:`${c.nome} representa ${share.toFixed(0)}% do MRR — concentração de receita elevada`});
+  });
   D.clientes.filter(c=>c.ativo&&c.duracao_meses&&c.data_inicio).forEach(c=>{
     const ultimoMes=addMes(c.data_inicio,c.duracao_meses-1);
     const diff=calcMesesEntre(mesRef,ultimoMes);
@@ -2348,6 +2512,7 @@ function renderMMRTable(){
     }).join('')}
     <th class="mc">Média</th>
     <th class="mrr-share-cell" title="Participação no MRR total">% MRR</th>
+    <th class="mc ltv-col" title="Lifetime Value — receita total histórica do cliente">LTV</th>
     <th>Status</th><th></th>
   </tr>`;
 
@@ -2420,6 +2585,11 @@ function renderMMRTable(){
       ?`<td class="mrr-share-cell"><div class="mrr-share-val">${share.toFixed(1)}%</div><div class="mrr-share-bar-bg"><div class="mrr-share-bar-fill" style="width:${Math.min(share,100)}%"></div></div></td>`
       :`<td class="mrr-share-cell"><span class="vc zero">—</span></td>`;
 
+    const ltv=calcLTV(c.cliente_id);
+    const ltvCell=ltv.total>0
+      ?`<td class="mc ltv-col"><div class="ltv-val">${fmtR(ltv.total)}</div><div class="ltv-sub">${ltv.meses}m · ${fmtR(ltv.ticket)}/mês</div></td>`
+      :`<td class="mc ltv-col"><span class="vc zero">—</span></td>`;
+
     const isEnc=c.encerrado;
     const showEnc2=localStorage.getItem('mp_show_enc')==='1';
     const hiddenStyle=isEnc&&!showEnc2?'display:none':'';
@@ -2428,6 +2598,7 @@ function renderMMRTable(){
       ${mesesCells}
       <td><span class="vc" style="color:var(--text3)">${fmtR(media)}</span></td>
       ${shareCell}
+      ${ltvCell}
       <td style="padding:8px 10px;">${isEnc?`<span class="badge-enc">Encerrado</span>`:`
         <span class="sp sp-${c.status}" onclick="cycleStatus('${c.id}','${c.status}')" title="Clique para alternar status">
           ${{pago:'Pago',pendente:'Pendente',inadimplente:'Inadimp.'}[c.status]||c.status}
@@ -2459,7 +2630,7 @@ function renderMMRTable(){
   const somaFim=`<td><span class="sum-val gold">${fmtR(mediaAnual)}</span></td>`;
 
   document.getElementById('mmr-tbody').innerHTML=rows+
-    `<tr class="sum-row">${somaLabel}${somaCells}${somaFim}<td></td><td></td><td></td></tr>`;
+    `<tr class="sum-row">${somaLabel}${somaCells}${somaFim}<td></td><td></td><td></td><td></td></tr>`;
 }
 
 function renderChart(){
