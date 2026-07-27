@@ -265,6 +265,15 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .sec-title{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:1.2px;text-transform:uppercase;}
 .sec-sub{font-size:10px;font-weight:400;color:var(--text3);margin-top:2px;}
 .sec-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text3);letter-spacing:.5px;text-transform:uppercase;}
+.vc-list{padding:10px 20px 14px;}
+.vc-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;}
+.vc-row:last-child{border-bottom:none;}
+.vc-nome{color:var(--text);font-weight:500;}
+.vc-qtd{font-weight:700;color:var(--accent);font-size:13px;min-width:28px;text-align:right;}
+.vc-bar-wrap{flex:1;margin:0 12px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;}
+.vc-bar-fill{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--a2),var(--accent));transition:width .4s ease;}
+.vc-total-row{display:flex;justify-content:space-between;padding:10px 20px 12px;font-size:11px;color:var(--text3);border-top:1px solid rgba(255,255,255,0.06);margin-top:2px;}
+.vc-total-val{font-weight:800;font-size:14px;color:var(--text);}
 .sec-total-g{font-size:13px;font-weight:800;color:var(--green);}
 .sec-total-r{font-size:13px;font-weight:800;color:var(--red);}
 .add-btn{background:var(--accent);color:#080808;border:none;border-radius:var(--r-sm);padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,0.1) inset,0 4px 14px rgba(201,162,39,0.25);}
@@ -1091,6 +1100,12 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
       <!-- OPERACIONAL -->
       <div class="dash-section-lbl" style="margin-top:4px">Capacidade Operacional</div>
       <div class="hero" id="hero-oper"></div>
+
+      <!-- VÍDEOS POR CLIENTE -->
+      <div class="sec" id="sec-videos-cliente" style="margin-bottom:12px;">
+        <div class="sec-hd"><span class="sec-title">Vídeos contratados por cliente</span></div>
+        <div id="videos-cliente-list"></div>
+      </div>
 
       <!-- GRÁFICO -->
       <div class="dash-chart-card">
@@ -2053,7 +2068,7 @@ function renderPrevisao3Meses(){
 
 // RENDER TUDO
 function renderTudo(){
-  renderDashBento();renderHeroMMR();renderHeroOperacional();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
+  renderDashBento();renderHeroMMR();renderHeroOperacional();renderVideosCliente();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
   renderFluxoBalance();renderPrevisao3Meses();renderFluxo();renderPontuais();
   renderFixas();renderVariaveis();renderTerceiros();renderEditores();renderHeroDesp();
   renderResumo();renderComparativo();renderMargemClientes();renderHeroFluxo();
@@ -2356,6 +2371,26 @@ function calcCapacidade(){
     return{nome:ed.nome||'Editor',total,entregues,pendentes:total-entregues};
   }).filter(e=>e.nome);
   return{videosContratados,videosProducao,videosEntregues,receitaVideo,taxaEntrega,editorStats};
+}
+
+function renderVideosCliente(){
+  const el=document.getElementById('videos-cliente-list');
+  if(!el)return;
+  const ativos=D.clientes.filter(c=>c.ativo&&!c.encerrado);
+  if(ativos.length===0){el.innerHTML='<div style="padding:16px 20px;font-size:12px;color:var(--text3)">Nenhum cliente ativo</div>';return;}
+  const max=Math.max(...ativos.map(c=>+c.videos_mes||1));
+  const total=ativos.reduce((a,c)=>a+(+c.videos_mes||1),0);
+  const rows=ativos.sort((a,b)=>(+b.videos_mes||1)-(+a.videos_mes||1)).map(c=>{
+    const v=+c.videos_mes||1;
+    const pct=Math.round(v/max*100);
+    return`<div class="vc-row">
+      <span class="vc-nome">${c.nome}</span>
+      <div class="vc-bar-wrap"><div class="vc-bar-fill" style="width:${pct}%"></div></div>
+      <span class="vc-qtd">${v}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div class="vc-list">${rows}</div>
+  <div class="vc-total-row"><span>Total contratado</span><span class="vc-total-val">${total} vídeos</span></div>`;
 }
 
 function renderHeroOperacional(){
