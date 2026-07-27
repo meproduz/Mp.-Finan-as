@@ -2342,12 +2342,13 @@ function renderBICards(){
 function calcCapacidade(){
   const clientesAtivos=D.clientes.filter(c=>c.ativo);
   const videosContratados=clientesAtivos.reduce((a,c)=>a+(+c.videos_mes||1),0);
+  // Em produção = contratados (fonte de verdade é o MRR)
+  const videosProducao=videosContratados;
   const editores=dadosEditores?.editores||[];
-  const videosProducao=editores.reduce((a,ed)=>a+ed.projetos.reduce((b,p)=>b+p.qtd,0),0);
   const videosEntregues=editores.reduce((a,ed)=>a+ed.projetos.filter(p=>p.entregue).reduce((b,p)=>b+p.qtd,0),0);
   const receitaVideo=videosContratados>0?calcMRR()/videosContratados:0;
-  // Taxa correta: entregues ÷ contratados (não ÷ pipeline)
-  const taxaEntrega=videosContratados>0?Math.round(videosEntregues/videosContratados*100):0;
+  // Taxa: entregues ÷ contratados
+  const taxaEntrega=videosContratados>0?Math.min(Math.round(videosEntregues/videosContratados*100),100):0;
   // Carga por editor
   const editorStats=editores.map(ed=>{
     const total=ed.projetos.reduce((a,p)=>a+p.qtd,0);
@@ -2362,11 +2363,9 @@ function renderHeroOperacional(){
   if(!el)return;
   const{videosContratados,videosProducao,videosEntregues,taxaEntrega,editorStats}=calcCapacidade();
 
-  // Card 2 — Em produção (pipeline dos editores)
-  const temBacklog=videosProducao>videosContratados;
-  const pipelineSub=temBacklog
-    ?`inclui backlog — ${videosProducao-videosContratados} além dos contratados`
-    :`${videosProducao-videosEntregues} pendentes de entrega`;
+  // Card 2 — Em produção = contratados do MRR
+  const pendentesEntrega=Math.max(videosContratados-videosEntregues,0);
+  const pipelineSub=pendentesEntrega>0?`${pendentesEntrega} pendentes de entrega`:`todos entregues este mês`;
 
   // Card 3 — Entregues: taxa sobre contratados
   const taxaCls=taxaEntrega>=80?'green-kpi':taxaEntrega>=50?'accent-kpi':'red-kpi';
