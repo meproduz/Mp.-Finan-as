@@ -132,14 +132,26 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 /* COMPARATIVO CHART */
 .comp-wrap{padding:20px;position:relative;height:200px;}
 
-/* TABS */
-.tab-bar{background:var(--bg1);border-bottom:1px solid var(--border);padding:8px 24px;display:flex;gap:4px;align-items:center;}
-.tab{padding:6px 14px;border:1px solid transparent;background:transparent;border-radius:20px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .12s;line-height:1.4;}
-.tab:hover{border-color:rgba(201,162,39,0.25);color:var(--gold2);}
-.tab.active{background:rgba(201,162,39,0.09);border-color:rgba(201,162,39,0.25);color:var(--gold2);font-weight:600;}
+/* TABS — mantido só para print */
+.tab-bar{display:none;}
+.tab{display:none;}
+
+/* APP BODY — sidebar + content */
+.app-body{display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px);}
+
+/* SIDEBAR */
+.sidebar{width:216px;flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;position:sticky;top:0;}
+.sidebar-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;}
+.sidebar-section{font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:1.4px;padding:10px 10px 4px;margin-top:4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-sm);border:1px solid transparent;background:transparent;color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;text-align:left;width:100%;transition:all .12s;line-height:1.4;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.nav-item.active{background:rgba(201,162,39,0.09);border-color:rgba(201,162,39,0.2);color:var(--gold2);font-weight:600;}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;line-height:1;}
+.nav-label{flex:1;}
+.sidebar-bottom{padding:10px 8px;border-top:1px solid var(--border);}
 
 /* CONTENT */
-.content{flex:1;overflow-y:auto;}
+.content{flex:1;overflow-y:auto;height:calc(100vh - 56px);}
 .page{display:none;padding:24px 32px;width:100%;max-width:1800px;margin:0 auto;}
 .page.active{display:block;animation:fadeUp .25s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -1014,9 +1026,24 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
   .chart-wrap{height:200px!important;padding:6px 0;}
 }
 
+/* SIDEBAR MOBILE — colapsa abaixo de 768px */
+@media(max-width:768px){
+  .app-body{flex-direction:column;}
+  .sidebar{width:100%;height:auto;flex-direction:row;border-right:none;border-bottom:1px solid var(--border);position:static;}
+  .sidebar-nav{flex-direction:row;padding:6px 8px;overflow-x:auto;gap:2px;}
+  .sidebar-section{display:none;}
+  .nav-item{flex-direction:column;gap:2px;padding:6px 8px;min-width:56px;justify-content:center;align-items:center;font-size:10px;}
+  .nav-icon{font-size:17px;}
+  .sidebar-bottom{padding:6px 8px;border-top:none;border-left:1px solid var(--border);}
+  .content{height:auto;}
+  .app-body{height:auto;}
+  .page{padding:16px 16px;}
+}
+
 /* PRINT */
 @media print{
-  .topbar,.tab-bar,.add-btn,.del-btn,.export-btn,.logout-btn,.config-btn,.mes-ctrl button,.status-sel,.modal{display:none!important;}
+  .topbar,.sidebar,.add-btn,.del-btn,.export-btn,.logout-btn,.config-btn,.mes-ctrl button,.status-sel,.modal{display:none!important;}
+  .app-body{display:block!important;}
   .page{display:block!important;padding:12px!important;}
   .app{display:block!important;}
   .content{overflow:visible!important;}
@@ -1076,15 +1103,40 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
     </div>
   </div>
 
-  <div class="tab-bar">
-    <button class="tab active" data-tab="dash" onclick="goTab('dash')">Dashboard</button>
-    <button class="tab" data-tab="mmr" onclick="goTab('mmr')">MRR</button>
-    <button class="tab" data-tab="fluxo" onclick="goTab('fluxo')">Fluxo de Caixa</button>
-    <button class="tab" data-tab="despesas" onclick="goTab('despesas')">Despesas</button>
-    <button class="tab" data-tab="resumo" onclick="goTab('resumo')">Resumo</button>
-    <button class="tab" data-tab="calc" onclick="goTab('calc')">Calculadora</button>
-    <button class="tab" data-tab="config" onclick="goTab('config')">⚙ Config</button>
-  </div>
+  <div class="app-body">
+  <aside class="sidebar">
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Principal</div>
+      <button class="nav-item active" data-tab="dash" onclick="goTab('dash')">
+        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-tab="mmr" onclick="goTab('mmr')">
+        <span class="nav-icon">📈</span><span class="nav-label">MRR</span>
+      </button>
+      <button class="nav-item" data-tab="fluxo" onclick="goTab('fluxo')">
+        <span class="nav-icon">💸</span><span class="nav-label">Fluxo de Caixa</span>
+      </button>
+      <button class="nav-item" data-tab="resumo" onclick="goTab('resumo')">
+        <span class="nav-icon">📋</span><span class="nav-label">Resumo</span>
+      </button>
+      <div class="sidebar-section">Operação</div>
+      <button class="nav-item" data-tab="demanda" onclick="goTab('demanda')">
+        <span class="nav-icon">🎬</span><span class="nav-label">Gestão de Demanda</span>
+      </button>
+      <button class="nav-item" data-tab="despesas" onclick="goTab('despesas')">
+        <span class="nav-icon">📁</span><span class="nav-label">Despesas</span>
+      </button>
+      <div class="sidebar-section">Ferramentas</div>
+      <button class="nav-item" data-tab="calc" onclick="goTab('calc')">
+        <span class="nav-icon">🔢</span><span class="nav-label">Calculadora</span>
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="nav-item" data-tab="config" onclick="goTab('config')">
+        <span class="nav-icon">⚙</span><span class="nav-label">Config</span>
+      </button>
+    </div>
+  </aside>
 
   <div class="content">
 
@@ -1101,11 +1153,6 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
       <div class="dash-section-lbl" style="margin-top:4px">Capacidade Operacional</div>
       <div class="hero" id="hero-oper"></div>
 
-      <!-- VÍDEOS POR CLIENTE -->
-      <div class="sec" id="sec-videos-cliente" style="margin-bottom:12px;">
-        <div class="sec-hd"><span class="sec-title">Vídeos contratados por cliente</span></div>
-        <div id="videos-cliente-list"></div>
-      </div>
 
       <!-- GRÁFICO -->
       <div class="dash-chart-card">
@@ -1227,6 +1274,17 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
         </div>
         <div class="editores-grid" id="editores-grid"></div>
       </div>
+    </div>
+
+    <!-- GESTÃO DE DEMANDA -->
+    <div class="page" id="page-demanda">
+      <!-- KPIs operacionais resumidos -->
+      <div class="dash-section-lbl">Capacidade contratada</div>
+      <div class="sec" style="margin-bottom:16px;">
+        <div class="sec-hd"><span class="sec-title">Vídeos contratados por cliente</span></div>
+        <div id="videos-cliente-list-demanda"></div>
+      </div>
+      <!-- Editores -->
     </div>
 
     <!-- CONFIG -->
@@ -1529,7 +1587,8 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
         <table class="dtbl"><thead><tr><th>Cliente</th><th>Plano</th><th style="text-align:right">MRR</th><th style="text-align:right">Custo prop.</th><th style="text-align:right">Lucro est.</th><th style="text-align:right">Margem</th></tr></thead><tbody id="margem-tbody"></tbody></table>
       </div>
     </div>
-  </div>
+  </div><!-- /content -->
+  </div><!-- /app-body -->
 </div>
 
 <!-- MODAL -->
@@ -2374,7 +2433,7 @@ function calcCapacidade(){
 }
 
 function renderVideosCliente(){
-  const el=document.getElementById('videos-cliente-list');
+  const el=document.getElementById('videos-cliente-list-demanda');
   if(!el)return;
   const ativos=D.clientes.filter(c=>c.ativo&&!c.encerrado);
   if(ativos.length===0){el.innerHTML='<div style="padding:16px 20px;font-size:12px;color:var(--text3)">Nenhum cliente ativo</div>';return;}
@@ -3793,7 +3852,7 @@ function toggleMostrarEnc(){
 async function navMes(n){mesRef=addMes(mesRef,n);await carregar();}
 
 function goTab(id){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+  document.querySelectorAll('.nav-item').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+id));
   localStorage.setItem('mp_active_tab',id);
 }
