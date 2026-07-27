@@ -505,6 +505,14 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .ltv-val{font-size:11px;font-weight:700;color:var(--text2);}
 .ltv-sub{font-size:9px;color:var(--text3);margin-top:2px;}
 
+/* DISTRIBUIÇÃO DE VÍDEOS POR CLIENTE */
+.distrib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:12px 0 4px;}
+.distrib-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;}
+.distrib-nome{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.distrib-qtd{font-size:13px;font-weight:900;color:var(--accent);flex-shrink:0;}
+.distrib-bar{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-top:4px;}
+.distrib-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--a2),var(--accent));}
+
 /* PREVISÃO 3 MESES */
 .prev3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .prev3-card{background:linear-gradient(145deg,#0E0E18,#0A0A13);border:1px solid rgba(255,255,255,0.055);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;}
@@ -1091,6 +1099,13 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
       <!-- OPERACIONAL -->
       <div class="dash-section-lbl" style="margin-top:4px">Capacidade Operacional</div>
       <div class="hero" id="hero-oper"></div>
+      <div class="sec" id="sec-distrib-videos" style="margin-bottom:12px;">
+        <div class="sec-hd" style="border-bottom:none;padding-bottom:0;">
+          <span class="sec-title">Vídeos contratados por cliente</span>
+          <span class="sec-total-g" id="distrib-total-lbl"></span>
+        </div>
+        <div id="distrib-videos-grid"></div>
+      </div>
 
       <!-- GRÁFICO -->
       <div class="dash-chart-card">
@@ -2011,6 +2026,30 @@ function getClienteHistMes(clienteId,mes){
   return D.clientesAno.find(x=>x.cliente_id===clienteId&&x.mes_ref===mes);
 }
 
+function renderDistribVideos(){
+  const el=document.getElementById('distrib-videos-grid');
+  const lbl=document.getElementById('distrib-total-lbl');
+  if(!el)return;
+  const ativos=D.clientes.filter(c=>c.ativo&&!c.encerrado);
+  const total=ativos.reduce((a,c)=>a+(+c.videos_mes||1),0);
+  const max=Math.max(...ativos.map(c=>+c.videos_mes||1),1);
+  if(lbl)lbl.textContent=`Total: ${total} vídeo${total!==1?'s':''}/mês`;
+  if(ativos.length===0){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:12px 0;">Nenhum cliente ativo.</div>';return;}
+  el.innerHTML=`<div class="distrib-grid">${
+    ativos.sort((a,b)=>(+b.videos_mes||1)-(+a.videos_mes||1)).map(c=>{
+      const qtd=+c.videos_mes||1;
+      const pct=Math.round(qtd/max*100);
+      return`<div class="distrib-item">
+        <div style="min-width:0;flex:1">
+          <div class="distrib-nome">${c.nome}</div>
+          <div class="distrib-bar"><div class="distrib-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="distrib-qtd">${qtd}</div>
+      </div>`;
+    }).join('')
+  }</div>`;
+}
+
 function renderPrevisao3Meses(){
   const el=document.getElementById('prev3-grid');
   if(!el)return;
@@ -2053,7 +2092,7 @@ function renderPrevisao3Meses(){
 
 // RENDER TUDO
 function renderTudo(){
-  renderDashBento();renderHeroMMR();renderHeroOperacional();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
+  renderDashBento();renderHeroMMR();renderHeroOperacional();renderDistribVideos();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
   renderFluxoBalance();renderPrevisao3Meses();renderFluxo();renderPontuais();
   renderFixas();renderVariaveis();renderTerceiros();renderEditores();renderHeroDesp();
   renderResumo();renderComparativo();renderMargemClientes();renderHeroFluxo();
