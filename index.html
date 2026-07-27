@@ -2342,14 +2342,14 @@ function renderBICards(){
 function calcCapacidade(){
   const clientesAtivos=D.clientes.filter(c=>c.ativo);
   const videosContratados=clientesAtivos.reduce((a,c)=>a+(+c.videos_mes||1),0);
-  // Em produção = contratados (fonte de verdade é o MRR)
-  const videosProducao=videosContratados;
   const editores=dadosEditores?.editores||[];
+  // Em produção = o que foi atribuído aos editores (cresce conforme lançamentos)
+  const videosProducao=editores.reduce((a,ed)=>a+ed.projetos.reduce((b,p)=>b+p.qtd,0),0);
   const videosEntregues=editores.reduce((a,ed)=>a+ed.projetos.filter(p=>p.entregue).reduce((b,p)=>b+p.qtd,0),0);
   const receitaVideo=videosContratados>0?calcMRR()/videosContratados:0;
   // Taxa: entregues ÷ contratados
   const taxaEntrega=videosContratados>0?Math.min(Math.round(videosEntregues/videosContratados*100),100):0;
-  // Carga por editor
+  // Carga por editor — total atribuído (base para "mais livre")
   const editorStats=editores.map(ed=>{
     const total=ed.projetos.reduce((a,p)=>a+p.qtd,0);
     const entregues=ed.projetos.filter(p=>p.entregue).reduce((a,p)=>a+p.qtd,0);
@@ -2377,17 +2377,17 @@ function renderHeroOperacional(){
   let editorCardSub='Nenhum editor cadastrado';
   let editorCardColor='var(--text3)';
   if(editorStats.length>0){
-    const sorted=[...editorStats].sort((a,b)=>a.pendentes-b.pendentes);
+    // Mais livre = menor total de vídeos atribuídos
+    const sorted=[...editorStats].sort((a,b)=>a.total-b.total);
     const maisLivre=sorted[0];
     const maisSobrecarregado=sorted[sorted.length-1];
     editorCardVal=maisLivre.nome.split(' ')[0];
-    editorCardSub=`${maisLivre.pendentes} pendente${maisLivre.pendentes!==1?'s':''} — mais disponível`;
     editorCardColor='var(--cyan)';
-    // Lista resumida de todos os editores
-    const listaEditores=sorted.map(e=>`${e.nome.split(' ')[0]}: ${e.pendentes}p`).join(' · ');
-    editorCardSub=`${maisLivre.pendentes} pendentes · ${listaEditores}`;
-    if(maisSobrecarregado.pendentes>maisLivre.pendentes*2)
-      editorCardColor='var(--yellow)'; // avisa se há desbalanceamento
+    // Lista: nome — total atribuídos
+    const listaEditores=sorted.map(e=>`${e.nome.split(' ')[0]}: ${e.total}v`).join(' · ');
+    editorCardSub=`${maisLivre.total} atribuídos · ${listaEditores}`;
+    if(maisSobrecarregado.total>maisLivre.total*2)
+      editorCardColor='var(--yellow)'; // avisa desbalanceamento
   }
 
   const items=[
