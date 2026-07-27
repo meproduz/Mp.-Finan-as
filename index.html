@@ -2346,22 +2346,56 @@ function calcCapacidade(){
   const videosProducao=editores.reduce((a,ed)=>a+ed.projetos.reduce((b,p)=>b+p.qtd,0),0);
   const videosEntregues=editores.reduce((a,ed)=>a+ed.projetos.filter(p=>p.entregue).reduce((b,p)=>b+p.qtd,0),0);
   const receitaVideo=videosContratados>0?calcMRR()/videosContratados:0;
-  const taxaEntrega=videosProducao>0?Math.round(videosEntregues/videosProducao*100):0;
-  return{videosContratados,videosProducao,videosEntregues,receitaVideo,taxaEntrega};
+  // Taxa correta: entregues ÷ contratados (não ÷ pipeline)
+  const taxaEntrega=videosContratados>0?Math.round(videosEntregues/videosContratados*100):0;
+  // Carga por editor
+  const editorStats=editores.map(ed=>{
+    const total=ed.projetos.reduce((a,p)=>a+p.qtd,0);
+    const entregues=ed.projetos.filter(p=>p.entregue).reduce((a,p)=>a+p.qtd,0);
+    return{nome:ed.nome||'Editor',total,entregues,pendentes:total-entregues};
+  }).filter(e=>e.nome);
+  return{videosContratados,videosProducao,videosEntregues,receitaVideo,taxaEntrega,editorStats};
 }
 
 function renderHeroOperacional(){
   const el=document.getElementById('hero-oper');
   if(!el)return;
-  const{videosContratados,videosProducao,videosEntregues,taxaEntrega}=calcCapacidade();
-  const pendentes=videosProducao-videosEntregues;
+  const{videosContratados,videosProducao,videosEntregues,taxaEntrega,editorStats}=calcCapacidade();
+
+  // Card 2 — Em produção (pipeline dos editores)
+  const temBacklog=videosProducao>videosContratados;
+  const pipelineSub=temBacklog
+    ?`inclui backlog — ${videosProducao-videosContratados} além dos contratados`
+    :`${videosProducao-videosEntregues} pendentes de entrega`;
+
+  // Card 3 — Entregues: taxa sobre contratados
   const taxaCls=taxaEntrega>=80?'green-kpi':taxaEntrega>=50?'accent-kpi':'red-kpi';
   const taxaColor=taxaEntrega>=80?'var(--green)':taxaEntrega>=50?'var(--gold2)':'var(--red)';
+  const entreguesSub=`${taxaEntrega}% dos contratados · de ${videosContratados} este mês`;
+
+  // Card 4 — Carga dos editores
+  let editorCardVal='—';
+  let editorCardSub='Nenhum editor cadastrado';
+  let editorCardColor='var(--text3)';
+  if(editorStats.length>0){
+    const sorted=[...editorStats].sort((a,b)=>a.pendentes-b.pendentes);
+    const maisLivre=sorted[0];
+    const maisSobrecarregado=sorted[sorted.length-1];
+    editorCardVal=maisLivre.nome.split(' ')[0];
+    editorCardSub=`${maisLivre.pendentes} pendente${maisLivre.pendentes!==1?'s':''} — mais disponível`;
+    editorCardColor='var(--cyan)';
+    // Lista resumida de todos os editores
+    const listaEditores=sorted.map(e=>`${e.nome.split(' ')[0]}: ${e.pendentes}p`).join(' · ');
+    editorCardSub=`${maisLivre.pendentes} pendentes · ${listaEditores}`;
+    if(maisSobrecarregado.pendentes>maisLivre.pendentes*2)
+      editorCardColor='var(--yellow)'; // avisa se há desbalanceamento
+  }
+
   const items=[
     {lbl:'Contratados/mês',val:videosContratados,sub:'soma dos contratos ativos',color:'#fff',cls:'purple-kpi',icon:'film'},
-    {lbl:'Em produção',val:videosProducao,sub:`${pendentes} pendentes este mês`,color:'var(--cyan)',cls:'cyan-kpi',icon:'play'},
-    {lbl:'Entregues',val:videosEntregues,sub:`de ${videosProducao} em produção`,color:videosEntregues>0?'var(--green)':'var(--text3)',cls:'green-kpi',icon:'check'},
-    {lbl:'Taxa de entrega',val:taxaEntrega+'%',sub:taxaEntrega>=80?'ritmo excelente':taxaEntrega>=50?'ritmo moderado':'atenção: ritmo baixo',color:taxaColor,cls:taxaCls,icon:'speed'},
+    {lbl:'Em produção',val:videosProducao,sub:pipelineSub,color:'var(--cyan)',cls:'cyan-kpi',icon:'play'},
+    {lbl:'Entregues',val:videosEntregues,sub:entreguesSub,color:videosEntregues>0?'var(--green)':'var(--text3)',cls:'green-kpi',icon:'check'},
+    {lbl:'Editor mais livre',val:editorCardVal,sub:editorCardSub,color:editorCardColor,cls:taxaCls,icon:'people'},
   ];
   el.innerHTML=items.map(k=>`
     <div class="hero-kpi ${k.cls}">
