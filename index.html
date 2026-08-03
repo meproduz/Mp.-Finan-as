@@ -286,6 +286,19 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .vc-bar-fill{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--a2),var(--accent));transition:width .4s ease;}
 .vc-total-row{display:flex;justify-content:space-between;padding:10px 20px 12px;font-size:11px;color:var(--text3);border-top:1px solid rgba(255,255,255,0.06);margin-top:2px;}
 .vc-total-val{font-weight:800;font-size:14px;color:var(--text);}
+/* CLIENTES INATIVOS */
+.inativos-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;}
+.inativos-table th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:9px 16px;text-align:left;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.07);white-space:nowrap;}
+.inativos-table td{padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text2);vertical-align:middle;}
+.inativos-table tr:last-child td{border-bottom:none;}
+.inativos-table tr:hover td{background:rgba(255,255,255,0.02);}
+.inat-nome{font-weight:600;color:var(--text);font-size:12px;}
+.inat-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;}
+.inat-badge-enc{background:rgba(240,71,71,0.12);color:var(--red);border:1px solid rgba(240,71,71,0.2);}
+.inat-badge-venc{background:rgba(255,140,66,0.12);color:var(--orange);border:1px solid rgba(255,140,66,0.2);}
+.inat-reativar-btn{background:rgba(201,162,39,0.09);border:1px solid rgba(201,162,39,0.25);color:var(--gold2);border-radius:var(--r-sm);padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;}
+.inat-reativar-btn:hover{background:rgba(201,162,39,0.18);color:var(--accent);}
+.inat-empty{padding:32px 20px;text-align:center;color:var(--text3);font-size:12px;}
 .sec-total-g{font-size:13px;font-weight:800;color:var(--green);}
 .sec-total-r{font-size:13px;font-weight:800;color:var(--red);}
 .add-btn{background:var(--accent);color:#080808;border:none;border-radius:var(--r-sm);padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,0.1) inset,0 4px 14px rgba(201,162,39,0.25);}
@@ -1115,6 +1128,10 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
         <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
         <span class="nav-label">MRR</span>
       </button>
+      <button class="nav-item" data-tab="inativos" onclick="goTab('inativos')">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span>
+        <span class="nav-label">Clientes Inativos</span>
+      </button>
       <button class="nav-item" data-tab="fluxo" onclick="goTab('fluxo')">
         <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
         <span class="nav-label">Fluxo de Caixa</span>
@@ -1291,6 +1308,35 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
       <div class="sec">
         <div class="sec-hd"><span class="sec-title">Vídeos contratados por cliente</span></div>
         <div id="videos-cliente-list-demanda"></div>
+      </div>
+    </div>
+
+    <!-- CLIENTES INATIVOS -->
+    <div class="page" id="page-inativos">
+      <div class="sec">
+        <div class="sec-hd">
+          <div class="sec-hd-left">
+            <span class="sec-title">Clientes Inativos</span>
+            <span class="sec-badge" id="inativos-count">0</span>
+          </div>
+        </div>
+        <div class="mmr-wrap">
+          <table class="inativos-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Plano</th>
+                <th>Valor</th>
+                <th>Período</th>
+                <th>Motivo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="inativos-tbody">
+              <tr><td colspan="6" class="inat-empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1639,7 +1685,7 @@ const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agos
 const MESES_C=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 let mesRef=mesAtual();
-let D={clientes:[],clientesAno:[],pontuais:[],fixas:[],variaveis:[],terceiros:[],historico:[],das:[]};
+let D={clientes:[],clientesAno:[],pontuais:[],fixas:[],variaveis:[],terceiros:[],historico:[],das:[],inativos:[]};
 let modalTipo='';
 let chartMMR=null;
 let chartComp=null;
@@ -1864,6 +1910,12 @@ async function loadClientes(){
     encerrado:m.fin_clientes?.encerrado||false,
     valor:+m.valor||0,ativo:m.ativo,status:m.status||'pendente',
   }));
+  // Popula inativos: encerrado manualmente OU contrato vencido
+  D.inativos=(cl||[]).filter(c=>{
+    if(c.encerrado)return true;
+    if(c.data_inicio&&c.duracao_meses&&mesRef>=addMes(c.data_inicio,c.duracao_meses))return true;
+    return false;
+  });
 }
 
 async function loadClientesAno(){
@@ -2145,13 +2197,47 @@ function renderPrevisao3Meses(){
   el.innerHTML=cards.join('');
 }
 
+// CLIENTES INATIVOS
+function renderClientesInativos(){
+  const tbody=document.getElementById('inativos-tbody');
+  const countEl=document.getElementById('inativos-count');
+  if(!tbody)return;
+  const lista=D.inativos||[];
+  if(countEl)countEl.textContent=lista.length;
+  if(lista.length===0){tbody.innerHTML='<tr><td colspan="6" class="inat-empty">Nenhum cliente inativo no momento</td></tr>';return;}
+  tbody.innerHTML=lista.map(c=>{
+    const encerrado=c.encerrado;
+    const vencido=!encerrado&&c.data_inicio&&c.duracao_meses&&mesRef>=addMes(c.data_inicio,c.duracao_meses);
+    const motivo=encerrado?'<span class="inat-badge inat-badge-enc">Encerrado</span>':'<span class="inat-badge inat-badge-venc">Vencido</span>';
+    const periodo=c.data_inicio?`${c.data_inicio}${c.duracao_meses?' + '+c.duracao_meses+'m':''}`:'-';
+    const valor=c.valor_padrao??c.valor??0;
+    return`<tr>
+      <td><span class="inat-nome">${c.nome||'—'}</span></td>
+      <td>${c.plano||'—'}</td>
+      <td>${fmtR(valor)}</td>
+      <td style="font-size:11px;color:var(--text3)">${periodo}</td>
+      <td>${motivo}</td>
+      <td><button class="inat-reativar-btn" onclick="reativarClienteInativo('${c.id}','${(c.nome||'').replace(/'/g,"\\'")}')">Reativar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function reativarClienteInativo(id, nome){
+  if(!confirm(`Reativar "${nome}"? O contrato será reiniciado a partir de ${mesRef}.`))return;
+  const{error}=await supa.from('fin_clientes').update({encerrado:false,data_inicio:mesRef}).eq('id',id);
+  if(error){toast('Erro ao reativar: '+error.message,'red');return;}
+  toast(`${nome} reativado!`,'green');
+  await carregar();
+  goTab('mmr');
+}
+
 // RENDER TUDO
 function renderTudo(){
   renderDashBento();renderHeroMMR();renderHeroOperacional();renderVideosCliente();renderMetaFull();renderAlerts();renderMMRTable();renderChart();
   renderFluxoBalance();renderPrevisao3Meses();renderFluxo();renderPontuais();
   renderFixas();renderVariaveis();renderTerceiros();renderEditores();renderHeroDesp();
   renderResumo();renderComparativo();renderMargemClientes();renderHeroFluxo();
-  renderSettings();
+  renderSettings();renderClientesInativos();
   salvarSnapshot();
 }
 
