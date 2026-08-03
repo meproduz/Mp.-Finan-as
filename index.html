@@ -1848,7 +1848,11 @@ async function loadClientes(){
   const visto=new Set();
   D.clientes=(mc2||[]).filter(m=>{
     if(visto.has(m.cliente_id))return false;
-    visto.add(m.cliente_id);return true;
+    visto.add(m.cliente_id);
+    // Exclui clientes cujo contrato ainda não começou neste mês
+    const di=m.fin_clientes?.data_inicio;
+    if(di&&mesRef<di)return false;
+    return true;
   }).map(m=>({
     id:m.id,cliente_id:m.cliente_id,
     nome:m.fin_clientes?.nome||'—',
