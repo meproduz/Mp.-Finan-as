@@ -2668,11 +2668,6 @@ function showAlertToasts(){
   },i*750));
 }
 
-function clienteAtivoNoMes(c,mes){
-  if(!c.duracao_meses||!c.data_inicio)return true;
-  return mes<addMes(c.data_inicio,c.duracao_meses);
-}
-
 function renderMMRTable(){
   const ano=anoAtual();
   const mesesAno=Array.from({length:12},(_,i)=>`${ano}-${String(i+1).padStart(2,'0')}`);
