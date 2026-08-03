@@ -1695,8 +1695,9 @@ function calcMesesEntre(m1,m2){
 function calcMRRProjetado(mes){
   // Considera apenas clientes com contrato ativo naquele mês
   return D.clientes.filter(c=>c.ativo).filter(c=>{
+    if(c.data_inicio&&mes<c.data_inicio)return false; // ainda não começou
     if(!c.duracao_meses||!c.data_inicio)return true; // indefinido = sempre ativo
-    const fimExclusivo=addMes(c.data_inicio,c.duracao_meses); // 1º mês fora do contrato
+    const fimExclusivo=addMes(c.data_inicio,c.duracao_meses);
     return mes<fimExclusivo;
   }).reduce((a,c)=>a+c.valor,0);
 }
@@ -1833,6 +1834,7 @@ async function loadClientes(){
     if(!mc?.find(m=>m.cliente_id===c.id)){
       // Verifica se contrato cobre este mês e se cliente não foi encerrado
       if(c.encerrado)continue; // Cliente inativo — não cria registro
+      if(c.data_inicio&&mesRef<c.data_inicio)continue; // Contrato ainda não começou
       const contratoAtivo=!c.duracao_meses||!c.data_inicio||mesRef<addMes(c.data_inicio,c.duracao_meses);
       if(!contratoAtivo)continue; // Contrato encerrado — não cria registro fantasma
       await supa.from('fin_mes_clientes').upsert(
@@ -1970,15 +1972,22 @@ async function salvarSnapshot(){
 }
 
 // CÁLCULOS
-function calcMRR(){return D.clientes.filter(c=>c.ativo&&!c.encerrado).reduce((a,c)=>a+c.valor,0);}
-function calcMRRRecebido(){return D.clientes.filter(c=>c.ativo&&!c.encerrado&&c.status==='pago').reduce((a,c)=>a+c.valor,0);}
+function clienteAtivoNoMes(c,mes){
+  // Exclui se ainda não começou
+  if(c.data_inicio&&mes<c.data_inicio)return false;
+  // Exclui se já terminou
+  if(c.duracao_meses&&c.data_inicio&&mes>=addMes(c.data_inicio,c.duracao_meses))return false;
+  return c.ativo&&!c.encerrado;
+}
+function calcMRR(){return D.clientes.filter(c=>clienteAtivoNoMes(c,mesRef)).reduce((a,c)=>a+c.valor,0);}
+function calcMRRRecebido(){return D.clientes.filter(c=>clienteAtivoNoMes(c,mesRef)&&c.status==='pago').reduce((a,c)=>a+c.valor,0);}
 function calcFat(){return calcMRR()+D.pontuais.reduce((a,p)=>a+(+p.valor||0),0);}
 function calcDesp(){return D.fixas.reduce((a,f)=>a+f.valor,0)+D.variaveis.reduce((a,v)=>a+(+v.valor||0),0)+D.terceiros.reduce((a,t)=>a+(+t.valor||0),0)+calcEditoresTotal();}
 function calcLucro(){return calcFat()-calcDesp();}
 function calcMargem(){const f=calcFat();return f>0?(calcLucro()/f*100):0;}
 function calcCustoFixoPct(){const mrr=calcMRR();return mrr>0?(D.fixas.reduce((a,f)=>a+f.valor,0)/mrr*100):0;}
 function calcCaixa(){return D.historico.filter(h=>h.mes_ref<mesRef).reduce((a,h)=>a+(+h.lucro_liquido||0),0)+calcLucro();}
-function calcInadimplencia(){return D.clientes.filter(c=>c.ativo&&!c.encerrado&&c.status==='inadimplente').reduce((a,c)=>a+c.valor,0);}
+function calcInadimplencia(){return D.clientes.filter(c=>clienteAtivoNoMes(c,mesRef)&&c.status==='inadimplente').reduce((a,c)=>a+c.valor,0);}
 function calcMediaMRR(){
   const mesesComDado=D.historico.filter(h=>h.mrr>0);
   if(!mesesComDado.length)return calcMRR();
