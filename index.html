@@ -1743,8 +1743,11 @@ function calcMesesEntre(m1,m2){
   return(y2-y1)*12+(mo2-mo1);
 }
 function calcMRRProjetado(mes){
-  // Considera apenas clientes com contrato ativo naquele mês
-  return D.clientes.filter(c=>c.ativo).filter(c=>{
+  // Considera apenas clientes com contrato ativo naquele mês.
+  // Usa !c.encerrado (não c.ativo) porque `ativo` reflete só o mês atualmente navegado —
+  // um cliente em gap agora (ativo:false no mês atual) ainda deve contar nas projeções
+  // futuras, se por data ele já estiver ativo de novo.
+  return D.clientes.filter(c=>!c.encerrado).filter(c=>{
     if(c.data_inicio&&mes<c.data_inicio)return false; // ainda não começou
     if(!c.duracao_meses||!c.data_inicio)return true; // indefinido = sempre ativo
     const fimExclusivo=addMes(c.data_inicio,c.duracao_meses);
@@ -2065,12 +2068,13 @@ function renderProjecao(){
   const proxMeses=Array.from({length:6},(_,i)=>addMes(mesRef,i+1));
   const rows=proxMeses.map(m=>{
     const mrrProj=calcMRRProjetado(m);
-    const clientesAtivos=D.clientes.filter(c=>c.ativo).filter(c=>{
+    const clientesAtivos=D.clientes.filter(c=>!c.encerrado).filter(c=>{
+      if(c.data_inicio&&m<c.data_inicio)return false;
       if(!c.duracao_meses||!c.data_inicio)return true;
       return m<addMes(c.data_inicio,c.duracao_meses);
     }).length;
     const vencendo=D.clientes.filter(c=>{
-      if(!c.ativo||!c.duracao_meses||!c.data_inicio)return false;
+      if(c.encerrado||!c.duracao_meses||!c.data_inicio)return false;
       return addMes(c.data_inicio,c.duracao_meses-1)===m;
     });
     const diff=mrrProj-mrrAtual;
