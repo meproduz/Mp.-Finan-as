@@ -2035,9 +2035,12 @@ async function salvarSnapshot(){
 
 // CÁLCULOS
 function clienteAtivoNoMes(c,mes){
-  // Exclui se ainda não começou
+  // Pro mês navegado, usa o `ativo` do registro real daquele mês — não a data_inicio do
+  // contrato, que pode já ter sido atualizada por uma renovação/reativação futura (mesma
+  // razão da correção na célula do mês atual, renderMMRTable).
+  if(mes===mesRef)return c.ativo&&!c.encerrado;
+  // Pra outros meses (passado/futuro) não temos o registro real aqui, só os dados do contrato
   if(c.data_inicio&&mes<c.data_inicio)return false;
-  // Exclui se já terminou
   if(c.duracao_meses&&c.data_inicio&&mes>=addMes(c.data_inicio,c.duracao_meses))return false;
   return c.ativo&&!c.encerrado;
 }
