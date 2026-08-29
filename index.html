@@ -296,6 +296,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .inat-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;}
 .inat-badge-enc{background:rgba(240,71,71,0.12);color:var(--red);border:1px solid rgba(240,71,71,0.2);}
 .inat-badge-venc{background:rgba(255,140,66,0.12);color:var(--orange);border:1px solid rgba(255,140,66,0.2);}
+.inat-badge-agend{background:rgba(79,142,247,0.12);color:var(--blue);border:1px solid rgba(79,142,247,0.2);}
 .inat-reativar-btn{background:rgba(201,162,39,0.09);border:1px solid rgba(201,162,39,0.25);color:var(--gold2);border-radius:var(--r-sm);padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;}
 .inat-reativar-btn:hover{background:rgba(201,162,39,0.18);color:var(--accent);}
 .inat-empty{padding:32px 20px;text-align:center;color:var(--text3);font-size:12px;}
@@ -1886,9 +1887,11 @@ async function loadClientes(){
       if(c.data_inicio&&mesRef<c.data_inicio)continue; // Contrato ainda não começou
       const contratoAtivo=!c.duracao_meses||!c.data_inicio||mesRef<addMes(c.data_inicio,c.duracao_meses);
       if(!contratoAtivo)continue; // Contrato encerrado — não cria registro fantasma
-      await supa.from('fin_mes_clientes').upsert(
-        {cliente_id:c.id,mes_ref:mesRef,ativo:c.ativo_padrao??true,valor:c.valor_padrao??0,status:'pendente'},
-        {onConflict:'cliente_id,mes_ref',ignoreDuplicates:true}
+      // fin_mes_clientes não tem constraint única em (cliente_id,mes_ref) — upsert com onConflict
+      // falha ("no unique or exclusion constraint"). A checagem em `mc` acima já garante que não
+      // existe registro pra este mês, então um insert simples é seguro aqui.
+      await supa.from('fin_mes_clientes').insert(
+        {cliente_id:c.id,mes_ref:mesRef,ativo:c.ativo_padrao??true,valor:c.valor_padrao??0,status:'pendente'}
       );
     }
   }
@@ -1913,10 +1916,13 @@ async function loadClientes(){
     encerrado:m.fin_clientes?.encerrado||false,
     valor:+m.valor||0,ativo:m.ativo,status:m.status||'pendente',
   }));
-  // Popula inativos: encerrado manualmente OU contrato vencido
+  // Popula inativos: encerrado manualmente, contrato vencido, OU início agendado no futuro
+  // (sem isso, um cliente reativado com gap "some" — não é vencido/encerrado, mas também
+  // não aparece na tabela do mês atual porque o contrato ainda não começou)
   D.inativos=(cl||[]).filter(c=>{
     if(c.encerrado)return true;
     if(c.data_inicio&&c.duracao_meses&&mesRef>=addMes(c.data_inicio,c.duracao_meses))return true;
+    if(c.data_inicio&&mesRef<c.data_inicio)return true;
     return false;
   });
 }
@@ -2210,9 +2216,12 @@ function renderClientesInativos(){
   if(lista.length===0){tbody.innerHTML='<tr><td colspan="8" class="inat-empty">Nenhum cliente inativo no momento</td></tr>';return;}
   tbody.innerHTML=lista.map(c=>{
     const encerrado=c.encerrado;
+    const agendado=!encerrado&&c.data_inicio&&mesRef<c.data_inicio;
     const motivo=encerrado
       ?'<span class="inat-badge inat-badge-enc">Encerrado</span>'
-      :'<span class="inat-badge inat-badge-venc">Vencido</span>';
+      :agendado
+        ?'<span class="inat-badge inat-badge-agend">Agendado</span>'
+        :'<span class="inat-badge inat-badge-venc">Vencido</span>';
     const valor=c.valor_padrao??c.valor??0;
     const inicio=c.data_inicio||'—';
     const duracao=c.duracao_meses?`${c.duracao_meses} meses`:'Indeterminado';
@@ -2230,17 +2239,48 @@ function renderClientesInativos(){
       <td style="font-size:11px;color:var(--text3)">${duracao}</td>
       <td style="font-size:11px;color:var(--text3)">${ultimoMes}</td>
       <td>${motivo}</td>
-      <td><button class="inat-reativar-btn" onclick="reativarClienteInativo('${c.id}','${(c.nome||'').replace(/'/g,"\\'")}')">Reativar</button></td>
+      <td><button class="inat-reativar-btn" onclick="abrirReativarCliente('${c.id}')">${agendado?'Editar':'Reativar'}</button></td>
     </tr>`;
   }).join('');
 }
 
-async function reativarClienteInativo(id, nome){
-  if(!confirm(`Reativar "${nome}"?\n\nOs dados históricos serão mantidos. Edite as datas pelo modal após reativar.`))return;
-  const{error}=await supa.from('fin_clientes').update({encerrado:false}).eq('id',id);
-  if(error){toast('Erro ao reativar: '+error.message,'red');return;}
-  toast(`${nome} reativado!`,'green');
-  await carregar();
+// Abre o modal de reativação — pede novo início/duração/valor porque o status do cliente
+// (ativo/inativo em cada mês) é decidido por data (data_inicio+duracao_meses), não por uma flag isolada.
+// Sem isso, reativar um cliente vencido não mudava nada visível (a data continuava expirada).
+function abrirReativarCliente(clienteId){
+  const c=(D.inativos||[]).find(x=>x.id===clienteId);
+  if(!c){alert('Cliente não encontrado');return;}
+  document.getElementById('inat-ovl')?.classList.remove('open'); // fecha o modal de Clientes Inativos, se estiver aberto, pra não empilhar os dois
+  clienteEditandoId=clienteId;
+  modalTipo='reativar-cliente';
+  document.getElementById('modal-title').textContent='Reativar cliente — '+c.nome;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="mf-hint">🔁 Informe o novo início do contrato (use um mês futuro se houver gap) e o valor atualizado. Meses anteriores não são alterados.</div>
+    <div class="mf"><label>Nome</label><input type="text" id="m-nome" value="${c.nome}"></div>
+    <div class="mf-row">
+      <div class="mf"><label>Plano</label>
+        <select id="m-plano">
+          <option ${c.plano==='Alicerce'?'selected':''}>Alicerce</option>
+          <option ${c.plano==='Tração'?'selected':''}>Tração</option>
+          <option ${c.plano==='Expansão'?'selected':''}>Expansão</option>
+          <option ${c.plano==='Só tráfego'?'selected':''}>Só tráfego</option>
+          <option ${c.plano==='Personalizado'?'selected':''}>Personalizado</option>
+        </select>
+      </div>
+      <div class="mf"><label>Valor mensal (R$)</label><input type="text" inputmode="decimal" id="m-valor" value="${c.valor_padrao??c.valor??0}"></div>
+    </div>
+    <div class="mf-row">
+      <div class="mf"><label>Dia de vencimento</label><input type="number" id="m-dia" value="${c.dia_vencimento||5}" min="1" max="31"></div>
+      <div class="mf"><label>Vídeos/mês</label><input type="number" id="m-videos" value="${c.videos_mes||1}" min="1"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="mf-row">
+      <div class="mf"><label>Duração total (meses)</label><input type="number" id="m-duracao" value="${c.duracao_meses||''}" placeholder="Ex: 6"></div>
+      <div class="mf"><label>Novo mês de início</label><input type="month" id="m-inicio" value="${mesRef}"></div>
+    </div>
+  `;
+  document.getElementById('ovl').classList.add('open');
+  setTimeout(()=>document.getElementById('m-inicio')?.focus(),100);
 }
 
 // RENDER TUDO
@@ -2877,7 +2917,7 @@ function renderMMRTable(){
         <div class="actions-cell">
           <button class="edit-btn" onclick="editarCliente('${c.cliente_id}')" title="Editar">✎</button>
           <button class="edit-btn" onclick="openHistoricoCliente('${c.cliente_id}','${c.nome}')" title="Ver histórico de status" style="color:var(--text3)">📊</button>
-          ${isEnc?`<button class="edit-btn" onclick="encerrarCliente('${c.cliente_id}',true)" title="Reativar cliente" style="color:var(--green)">↺</button>`:`<button class="del-btn" onclick="delCliente('${c.id}')" title="Remover">✕</button>`}
+          ${isEnc?`<button class="edit-btn" onclick="abrirReativarCliente('${c.cliente_id}')" title="Reativar cliente" style="color:var(--green)">↺</button>`:`<button class="del-btn" onclick="delCliente('${c.id}')" title="Remover">✕</button>`}
         </div>
       </td>
     </tr>`;
@@ -3778,6 +3818,26 @@ function closeHistModal(){document.getElementById('hist-ovl').classList.remove('
 function openInativos(){renderClientesInativos();document.getElementById('inat-ovl').classList.add('open');}
 function closeInativos(){document.getElementById('inat-ovl').classList.remove('open');}
 
+// Busca registros de fin_mes_clientes pros meses informados e limpa duplicatas (mais de uma linha
+// pro mesmo cliente+mês — podem ter sobrado de tentativas antigas, já que a tabela não tem
+// constraint única nessas colunas). Retorna Map mes_ref->id, com no máximo 1 linha por mês.
+async function mesesExistentesSemDup(clienteId,meses){
+  const{data}=await supa.from('fin_mes_clientes').select('id,mes_ref').eq('cliente_id',clienteId).in('mes_ref',meses);
+  const porMes=new Map();
+  for(const e of(data||[])){
+    if(!porMes.has(e.mes_ref))porMes.set(e.mes_ref,[]);
+    porMes.get(e.mes_ref).push(e.id);
+  }
+  const mapa=new Map();
+  const idsParaApagar=[];
+  for(const[m,ids] of porMes){
+    mapa.set(m,ids[0]);
+    idsParaApagar.push(...ids.slice(1));
+  }
+  if(idsParaApagar.length)await supa.from('fin_mes_clientes').delete().in('id',idsParaApagar);
+  return mapa;
+}
+
 async function salvarModal(){
   const btn=document.getElementById('m-save');btn.textContent='Salvando...';
   try{
@@ -3856,25 +3916,79 @@ async function salvarModal(){
         await supa.from('fin_mes_clientes').update({valor}).eq('id',mesAtualRec.id);
       }
 
-      // Recria/atualiza registros de todos os meses do contrato
+      // Sincroniza meses FUTUROS do contrato (mes_ref > mesRef) com o valor novo.
+      // Nunca mexe em meses já passados/atuais — o mês atual já foi tratado acima,
+      // e meses anteriores a ele são histórico (podem já estar pagos) e não devem ser reescritos.
       if(duracaoNova&&inicio){
-        const inserts=[];
-        for(let i=0;i<duracaoNova;i++){
-          inserts.push({cliente_id:clienteEditandoId,mes_ref:addMes(inicio,i),ativo:true,valor,status:'pendente'});
+        const mesesFuturos=[];
+        for(let i=0;i<duracaoNova;i++){const m=addMes(inicio,i);if(m>mesRef)mesesFuturos.push(m);}
+        const mapExistentes=await mesesExistentesSemDup(clienteEditandoId,mesesFuturos);
+        const novos=[];
+        const atualizacoes=[];
+        for(const m of mesesFuturos){
+          if(mapExistentes.has(m)){
+            atualizacoes.push(supa.from('fin_mes_clientes').update({valor}).eq('id',mapExistentes.get(m)));
+          }else{
+            novos.push({cliente_id:clienteEditandoId,mes_ref:m,ativo:true,valor,status:'pendente'});
+          }
         }
-        await supa.from('fin_mes_clientes').upsert(inserts,{onConflict:'cliente_id,mes_ref',ignoreDuplicates:false});
+        if(atualizacoes.length)await Promise.all(atualizacoes);
+        if(novos.length)await supa.from('fin_mes_clientes').insert(novos);
       }
 
-      // Adiciona meses extras (renovação)
+      // Adiciona meses extras (renovação) — só cria meses novos após o fim atual do contrato
       if(addMeses>0&&duracaoNova&&inicio){
         const ultimoAtual=addMes(inicio,duracaoNova-1);
         const novaDuracao=duracaoNova+addMeses;
-        const inserts2=[];
-        for(let i=0;i<addMeses;i++){
-          inserts2.push({cliente_id:clienteEditandoId,mes_ref:addMes(ultimoAtual,i+1),ativo:true,valor,status:'pendente'});
-        }
-        await supa.from('fin_mes_clientes').upsert(inserts2,{onConflict:'cliente_id,mes_ref',ignoreDuplicates:false});
+        const mesesNovos=[];
+        for(let i=0;i<addMeses;i++)mesesNovos.push(addMes(ultimoAtual,i+1));
+        const mapExistentes2=await mesesExistentesSemDup(clienteEditandoId,mesesNovos);
+        const inserts2=mesesNovos.filter(m=>!mapExistentes2.has(m)).map(m=>({cliente_id:clienteEditandoId,mes_ref:m,ativo:true,valor,status:'pendente'}));
+        if(inserts2.length)await supa.from('fin_mes_clientes').insert(inserts2);
         await supa.from('fin_clientes').update({duracao_meses:novaDuracao}).eq('id',clienteEditandoId);
+      }
+
+      clienteEditandoId=null;
+    }else if(modalTipo==='reativar-cliente'){
+      const nome=document.getElementById('m-nome').value.trim();
+      if(!nome){alert('Informe o nome');btn.textContent='Salvar';return;}
+      const plano=document.getElementById('m-plano').value;
+      const valor=parseVal(document.getElementById('m-valor').value)||0;
+      const dia=parseInt(document.getElementById('m-dia').value)||5;
+      const videos=parseInt(document.getElementById('m-videos').value)||1;
+      const duracao=parseInt(document.getElementById('m-duracao').value)||null;
+      const inicio=document.getElementById('m-inicio').value;
+      if(!inicio){alert('Informe o novo mês de início');btn.textContent='Salvar';return;}
+
+      // Reabre o contrato com as novas datas/valor — histórico anterior à reativação não é tocado.
+      const{error:clErr}=await supa.from('fin_clientes').update({
+        encerrado:false,nome,plano,valor_padrao:valor,dia_vencimento:dia,
+        videos_mes:videos,duracao_meses:duracao||null,data_inicio:inicio
+      }).eq('id',clienteEditandoId);
+      if(clErr)throw new Error('Erro ao reativar cliente: '+clErr.message);
+
+      const mesesAlvo=new Set();
+      const qtd=duracao||1;
+      for(let i=0;i<qtd;i++)mesesAlvo.add(addMes(inicio,i));
+      // Garante que o mês navegado SEMPRE tem registro (mesmo padrão do cadastro de cliente novo,
+      // linha ~3839) — se o início ficar no futuro (gap), o filtro de exibição por data esconde
+      // o cliente até lá (fica listado como "Agendado" em Clientes Inativos nesse meio tempo).
+      mesesAlvo.add(mesRef);
+
+      const mapExistentes=await mesesExistentesSemDup(clienteEditandoId,Array.from(mesesAlvo));
+      const novos=[];
+      const atualizacoes=[];
+      for(const m of mesesAlvo){
+        if(mapExistentes.has(m)){
+          atualizacoes.push(supa.from('fin_mes_clientes').update({ativo:true,valor,status:'pendente'}).eq('id',mapExistentes.get(m)));
+        }else{
+          novos.push({cliente_id:clienteEditandoId,mes_ref:m,ativo:true,valor,status:'pendente'});
+        }
+      }
+      if(atualizacoes.length)await Promise.all(atualizacoes);
+      if(novos.length){
+        const{error:mcErr}=await supa.from('fin_mes_clientes').insert(novos);
+        if(mcErr)throw new Error('Erro ao recriar meses do cliente: '+mcErr.message);
       }
 
       clienteEditandoId=null;
@@ -3887,7 +4001,7 @@ async function salvarModal(){
     const _tipoSalvo=modalTipo;
     closeModal();await carregar();
     // Após salvar cliente, vai pro MMR para mostrar o resultado imediatamente
-    if(_tipoSalvo==='cliente'||_tipoSalvo==='editar-cliente')goTab('mmr');
+    if(_tipoSalvo==='cliente'||_tipoSalvo==='editar-cliente'||_tipoSalvo==='reativar-cliente')goTab('mmr');
   }catch(e){alert('Erro: '+e.message);}
   btn.textContent='Salvar';
 }
@@ -3935,8 +4049,8 @@ function editarCliente(clienteId){
     <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 2px;">
       <span style="font-size:11px;color:var(--text3)">Situação do contrato</span>
       ${c.encerrado
-        ?`<button class="btn-reativar" onclick="encerrarCliente('${clienteEditandoId}',true);document.getElementById('ovl').classList.remove('open')">↺ Reativar cliente</button>`
-        :`<button class="btn-enc" onclick="encerrarCliente('${clienteEditandoId}',false);document.getElementById('ovl').classList.remove('open')">Encerrar contrato</button>`
+        ?`<button class="btn-reativar" onclick="abrirReativarCliente('${clienteEditandoId}')">↺ Reativar cliente</button>`
+        :`<button class="btn-enc" onclick="encerrarCliente('${clienteEditandoId}');document.getElementById('ovl').classList.remove('open')">Encerrar contrato</button>`
       }
     </div>
   `;
@@ -3944,18 +4058,13 @@ function editarCliente(clienteId){
   setTimeout(()=>document.getElementById('m-nome')?.focus(),100);
 }
 
-// ENCERRAR / REATIVAR CLIENTE
-async function encerrarCliente(clienteId, reativar=false){
-  const label=reativar?'Reativar':'Encerrar';
-  if(!confirm(`${label} este cliente?`))return;
-  // Atualiza fin_clientes.encerrado
-  await supa.from('fin_clientes').update({encerrado:!reativar}).eq('id',clienteId);
-  // Se encerrar: seta fin_mes_clientes.ativo=false para o mês atual
-  if(!reativar){
-    const rec=D.clientes.find(c=>c.cliente_id===clienteId);
-    if(rec)await supa.from('fin_mes_clientes').update({ativo:false}).eq('id',rec.id);
-  }
-  showToast(reativar?'↺':'✓',`Cliente ${reativar?'reativado':'encerrado'} com sucesso`,reativar?'green':'blue',3000);
+// ENCERRAR CLIENTE (reativação é feita via abrirReativarCliente/salvarModal)
+async function encerrarCliente(clienteId){
+  if(!confirm('Encerrar este cliente?'))return;
+  await supa.from('fin_clientes').update({encerrado:true}).eq('id',clienteId);
+  const rec=D.clientes.find(c=>c.cliente_id===clienteId);
+  if(rec)await supa.from('fin_mes_clientes').update({ativo:false}).eq('id',rec.id);
+  showToast('✓','Cliente encerrado com sucesso','blue',3000);
   await carregar();
 }
 function toggleMostrarEnc(){
@@ -4248,7 +4357,7 @@ async function seedClientes(){
         const ativo=!inativo;
         meses_inserts.push({cliente_id:cl.id,mes_ref:m,ativo,valor,status:inativo?'pendente':'pendente'});
       }
-      await supa.from('fin_mes_clientes').upsert(meses_inserts,{onConflict:'cliente_id,mes_ref'});
+      await supa.from('fin_mes_clientes').insert(meses_inserts);
       ok++;
       status.textContent+=`✓ ${c.nome}\n`;
       status.style.color='var(--green)';
