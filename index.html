@@ -1901,9 +1901,6 @@ async function loadClientes(){
   D.clientes=(mc2||[]).filter(m=>{
     if(visto.has(m.cliente_id))return false;
     visto.add(m.cliente_id);
-    // Exclui clientes cujo contrato ainda não começou neste mês
-    const di=m.fin_clientes?.data_inicio;
-    if(di&&mesRef<di)return false;
     return true;
   }).map(m=>({
     id:m.id,cliente_id:m.cliente_id,
@@ -3866,9 +3863,10 @@ async function salvarModal(){
         const m=addMes(inicio,i);
         if(!mesesSet.has(m)){mesesSet.add(m);inserts.push({cliente_id:cl.id,mes_ref:m,ativo:true,valor,status:'pendente'});}
       }
-      // Garante que o mês navegado SEMPRE tem registro (cliente aparece no MMR imediatamente)
+      // Garante que o mês navegado SEMPRE tem registro (cliente aparece no MMR imediatamente,
+      // mesmo antes do início — ativo:false nesse caso pra não contar em métricas de "ativos")
       if(!mesesSet.has(mesRef)){
-        inserts.push({cliente_id:cl.id,mes_ref:mesRef,ativo:true,valor,status:'pendente'});
+        inserts.push({cliente_id:cl.id,mes_ref:mesRef,ativo:mesRef>=inicio,valor,status:'pendente'});
       }
       const{error:mcErr}=await supa.from('fin_mes_clientes').insert(inserts);
       if(mcErr)throw new Error('Erro ao criar meses do cliente: '+mcErr.message);
@@ -3971,18 +3969,19 @@ async function salvarModal(){
       const qtd=duracao||1;
       for(let i=0;i<qtd;i++)mesesAlvo.add(addMes(inicio,i));
       // Garante que o mês navegado SEMPRE tem registro (mesmo padrão do cadastro de cliente novo,
-      // linha ~3839) — se o início ficar no futuro (gap), o filtro de exibição por data esconde
-      // o cliente até lá (fica listado como "Agendado" em Clientes Inativos nesse meio tempo).
+      // linha ~3839) — a linha fica visível mesmo se o início for no futuro (gap), mostrando "—"
+      // até lá (dá visão de previsibilidade em vez de o cliente sumir da tabela).
       mesesAlvo.add(mesRef);
 
       const mapExistentes=await mesesExistentesSemDup(clienteEditandoId,Array.from(mesesAlvo));
       const novos=[];
       const atualizacoes=[];
       for(const m of mesesAlvo){
+        const ativo=m>=inicio; // false pros meses antes do início — não conta em métricas de "ativos"
         if(mapExistentes.has(m)){
-          atualizacoes.push(supa.from('fin_mes_clientes').update({ativo:true,valor,status:'pendente'}).eq('id',mapExistentes.get(m)));
+          atualizacoes.push(supa.from('fin_mes_clientes').update({ativo,valor,status:'pendente'}).eq('id',mapExistentes.get(m)));
         }else{
-          novos.push({cliente_id:clienteEditandoId,mes_ref:m,ativo:true,valor,status:'pendente'});
+          novos.push({cliente_id:clienteEditandoId,mes_ref:m,ativo,valor,status:'pendente'});
         }
       }
       if(atualizacoes.length)await Promise.all(atualizacoes);
