@@ -2859,7 +2859,11 @@ function renderMMRTable(){
       const tdCls=isCur?'td-cur':isPast?'td-past':'td-fut';
 
       if(isCur){
-        if(c.data_inicio&&c.data_inicio>mesRef)return`<td class="${tdCls}"><span class="vc zero">—</span></td>`;
+        // Usa o `ativo` do próprio registro do mês (não a data_inicio atual do contrato) —
+        // se o contrato foi renovado/reativado com início futuro, data_inicio já mudou pro novo
+        // valor, mas o mês atual pode ter um registro real e válido (histórico) que não deve
+        // sumir por causa disso.
+        if(!c.ativo)return`<td class="${tdCls}"><span class="vc zero">—</span></td>`;
         somaCliente+=c.valor;mesesComValor++;
         // Cor do mês atual = status de pagamento
         const curCls=c.status==='pago'?'cur-pago':c.status==='inadimplente'?'cur-inadimplente':'';
