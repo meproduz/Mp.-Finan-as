@@ -17,6 +17,9 @@
   ALTER TABLE fin_clientes ADD COLUMN IF NOT EXISTS encerrado BOOLEAN DEFAULT FALSE;
   ALTER TABLE fin_fixas ADD COLUMN IF NOT EXISTS dia_pagamento INT DEFAULT 5;
   CREATE TABLE IF NOT EXISTS fin_das_mei (id BIGSERIAL PRIMARY KEY, mes_ref TEXT UNIQUE NOT NULL, valor NUMERIC DEFAULT 76.90, pago BOOLEAN DEFAULT FALSE, pago_em TIMESTAMPTZ);
+  -- editores/projetos (Capacidade da Equipe) — ver _migrar_editores_supabase.sql
+  ALTER TABLE fin_clientes ADD COLUMN IF NOT EXISTS cortes_mes INT DEFAULT 0;
+  ALTER TABLE fin_editor_projetos ADD COLUMN IF NOT EXISTS tipo TEXT DEFAULT 'video' CHECK (tipo IN ('video','corte'));
 */
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -2010,6 +2013,7 @@ async function loadClientes(){
     duracao_meses:m.fin_clientes?.duracao_meses||null,
     data_inicio:m.fin_clientes?.data_inicio||null,
     videos_mes:m.fin_clientes?.videos_mes||1,
+    cortes_mes:m.fin_clientes?.cortes_mes||0,
     encerrado:m.fin_clientes?.encerrado||false,
     valor:+m.valor||0,ativo:m.ativo,status:m.status||'pendente',
   }));
@@ -2372,7 +2376,10 @@ function abrirReativarCliente(clienteId){
     </div>
     <div class="mf-row">
       <div class="mf"><label>Dia de vencimento</label><input type="number" id="m-dia" value="${c.dia_vencimento||5}" min="1" max="31"></div>
+    </div>
+    <div class="mf-row">
       <div class="mf"><label>Vídeos/mês</label><input type="number" id="m-videos" value="${c.videos_mes||1}" min="1"></div>
+      <div class="mf"><label>Cortes/mês</label><input type="number" id="m-cortes" value="${c.cortes_mes||0}" min="0"></div>
     </div>
     <div class="divider"></div>
     <div class="mf-row">
@@ -2786,20 +2793,24 @@ function renderBICards(){
 function calcCapacidade(){
   const clientesAtivos=D.clientes.filter(c=>c.ativo);
   const videosContratados=clientesAtivos.reduce((a,c)=>a+(+c.videos_mes||1),0);
+  const cortesContratados=clientesAtivos.reduce((a,c)=>a+(+c.cortes_mes||0),0);
   const editores=dadosEditores?.editores||[];
+  const todosProjetos=editores.flatMap(ed=>ed.projetos);
   // Em produção = o que foi atribuído aos editores (cresce conforme lançamentos)
-  const videosProducao=editores.reduce((a,ed)=>a+ed.projetos.reduce((b,p)=>b+p.qtd,0),0);
-  const videosEntregues=editores.reduce((a,ed)=>a+ed.projetos.filter(p=>p.entregue).reduce((b,p)=>b+p.qtd,0),0);
+  const videosProducao=todosProjetos.reduce((a,p)=>a+p.qtdVideo,0);
+  const videosEntregues=todosProjetos.filter(p=>p.entregue).reduce((a,p)=>a+p.qtdVideo,0);
+  const cortesProducao=todosProjetos.reduce((a,p)=>a+p.qtdCorte,0);
+  const cortesEntregues=todosProjetos.filter(p=>p.entregue).reduce((a,p)=>a+p.qtdCorte,0);
   const receitaVideo=videosContratados>0?calcMRR()/videosContratados:0;
   // Taxa: entregues ÷ contratados
   const taxaEntrega=videosContratados>0?Math.min(Math.round(videosEntregues/videosContratados*100),100):0;
-  // Carga por editor — total atribuído (base para "mais livre")
+  // Carga por editor — total atribuído (vídeo + corte, base para "mais livre")
   const editorStats=editores.map(ed=>{
-    const total=ed.projetos.reduce((a,p)=>a+p.qtd,0);
-    const entregues=ed.projetos.filter(p=>p.entregue).reduce((a,p)=>a+p.qtd,0);
+    const total=ed.projetos.reduce((a,p)=>a+p.qtdVideo+p.qtdCorte,0);
+    const entregues=ed.projetos.filter(p=>p.entregue).reduce((a,p)=>a+p.qtdVideo+p.qtdCorte,0);
     return{nome:ed.nome||'Editor',total,entregues,pendentes:total-entregues};
   }).filter(e=>e.nome);
-  return{videosContratados,videosProducao,videosEntregues,receitaVideo,taxaEntrega,editorStats};
+  return{videosContratados,cortesContratados,videosProducao,videosEntregues,cortesProducao,cortesEntregues,receitaVideo,taxaEntrega,editorStats};
 }
 
 function renderVideosCliente(){
@@ -2807,34 +2818,39 @@ function renderVideosCliente(){
   if(!el)return;
   const ativos=D.clientes.filter(c=>c.ativo&&!c.encerrado);
   if(ativos.length===0){el.innerHTML='<div style="padding:16px 20px;font-size:12px;color:var(--text3)">Nenhum cliente ativo</div>';return;}
-  const max=Math.max(...ativos.map(c=>+c.videos_mes||1));
-  const total=ativos.reduce((a,c)=>a+(+c.videos_mes||1),0);
-  const rows=ativos.sort((a,b)=>(+b.videos_mes||1)-(+a.videos_mes||1)).map(c=>{
-    const v=+c.videos_mes||1;
-    const pct=Math.round(v/max*100);
+  const totalUnid=c=>(+c.videos_mes||1)+(+c.cortes_mes||0);
+  const max=Math.max(...ativos.map(totalUnid));
+  const totalVideos=ativos.reduce((a,c)=>a+(+c.videos_mes||1),0);
+  const totalCortes=ativos.reduce((a,c)=>a+(+c.cortes_mes||0),0);
+  const rows=ativos.sort((a,b)=>totalUnid(b)-totalUnid(a)).map(c=>{
+    const v=+c.videos_mes||1;const co=+c.cortes_mes||0;
+    const pct=Math.round(totalUnid(c)/max*100);
     return`<div class="vc-row">
       <span class="vc-nome">${c.nome}</span>
       <div class="vc-bar-wrap"><div class="vc-bar-fill" style="width:${pct}%"></div></div>
-      <span class="vc-qtd">${v}</span>
+      <span class="vc-qtd">${v}${co>0?` <span style="color:var(--text3);font-weight:600">+${co} corte${co!==1?'s':''}</span>`:''}</span>
     </div>`;
   }).join('');
   el.innerHTML=`<div class="vc-list">${rows}</div>
-  <div class="vc-total-row"><span>Total contratado</span><span class="vc-total-val">${total} vídeos</span></div>`;
+  <div class="vc-total-row"><span>Total contratado</span><span class="vc-total-val">${totalVideos} vídeos${totalCortes>0?` · ${totalCortes} cortes`:''}</span></div>`;
 }
 
 function renderHeroOperacional(){
   const el=document.getElementById('hero-oper');
   if(!el)return;
-  const{videosContratados,videosProducao,videosEntregues,taxaEntrega,editorStats}=calcCapacidade();
+  const{videosContratados,cortesContratados,videosProducao,videosEntregues,cortesProducao,cortesEntregues,taxaEntrega,editorStats}=calcCapacidade();
+
+  // Card 1 — Contratados: vídeos + cortes
+  const contratadosSub=cortesContratados>0?`soma dos contratos · +${cortesContratados} cortes/mês`:'soma dos contratos ativos';
 
   // Card 2 — Em produção = contratados do MRR
   const pendentesEntrega=Math.max(videosContratados-videosEntregues,0);
-  const pipelineSub=pendentesEntrega>0?`${pendentesEntrega} pendentes de entrega`:`todos entregues este mês`;
+  const pipelineSub=(pendentesEntrega>0?`${pendentesEntrega} pendentes de entrega`:`todos entregues este mês`)+(cortesProducao>0?` · ${cortesProducao} cortes em produção`:'');
 
   // Card 3 — Entregues: taxa sobre contratados
   const taxaCls=taxaEntrega>=80?'green-kpi':taxaEntrega>=50?'accent-kpi':'red-kpi';
   const taxaColor=taxaEntrega>=80?'var(--green)':taxaEntrega>=50?'var(--gold2)':'var(--red)';
-  const entreguesSub=`${taxaEntrega}% dos contratados · de ${videosContratados} este mês`;
+  const entreguesSub=`${taxaEntrega}% dos contratados · de ${videosContratados} este mês`+(cortesProducao>0?` · ${cortesEntregues}/${cortesProducao} cortes`:'');
 
   // Card 4 — Carga dos editores
   let editorCardVal='—';
@@ -2855,7 +2871,7 @@ function renderHeroOperacional(){
   }
 
   const items=[
-    {lbl:'Contratados/mês',val:videosContratados,sub:'soma dos contratos ativos',color:'#fff',cls:'purple-kpi',icon:'film'},
+    {lbl:'Contratados/mês',val:videosContratados,sub:contratadosSub,color:'#fff',cls:'purple-kpi',icon:'film'},
     {lbl:'Em produção',val:videosProducao,sub:pipelineSub,color:'var(--cyan)',cls:'cyan-kpi',icon:'play'},
     {lbl:'Entregues',val:videosEntregues,sub:entreguesSub,color:videosEntregues>0?'var(--green)':'var(--text3)',cls:'green-kpi',icon:'check'},
     {lbl:'Editor mais livre',val:editorCardVal,sub:editorCardSub,color:editorCardColor,cls:taxaCls,icon:'people'},
@@ -3595,16 +3611,16 @@ async function carregarEditores(){
   let{data:eds,error:edErr}=await supa.from('fin_editores').select('*').order('created_at');
   if(edErr){console.error('Erro ao carregar editores:',edErr);dadosEditores={editores:[]};return;}
   if(!eds||eds.length===0){
-    const{data:novos}=await supa.from('fin_editores').insert([{nome:'Gabriel',rate:40},{nome:'Allan',rate:40}]).select();
+    const{data:novos}=await supa.from('fin_editores').insert([{nome:'Gabriel',rate:40,rate_corte:20},{nome:'Allan',rate:40,rate_corte:20}]).select();
     eds=novos||[];
   }
   const{data:projs}=await supa.from('fin_editor_projetos').select('*').eq('mes_ref',mesRef);
   dadosEditores={editores:eds.map(ed=>({
-    id:ed.id,nome:ed.nome,rate:ed.rate,
-    projetos:(projs||[]).filter(p=>p.editor_id===ed.id).map(p=>({id:p.id,nome:p.nome||'',qtd:p.qtd,entregue:p.entregue}))
+    id:ed.id,nome:ed.nome,rate:ed.rate,rateCorte:ed.rate_corte??20,
+    projetos:(projs||[]).filter(p=>p.editor_id===ed.id).map(p=>({id:p.id,nome:p.nome||'',qtdVideo:p.qtd_video||0,qtdCorte:p.qtd_corte||0,entregue:p.entregue}))
   }))};
 }
-function calcEdTotal(ed){return ed.projetos.reduce((a,p)=>a+p.qtd*(+ed.rate||0),0);}
+function calcEdTotal(ed){return ed.projetos.reduce((a,p)=>a+p.qtdVideo*(+ed.rate||0)+p.qtdCorte*(+ed.rateCorte||0),0);}
 function calcEditoresTotal(){return(dadosEditores?.editores||[]).reduce((a,ed)=>a+calcEdTotal(ed),0);}
 function escEd(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
@@ -3613,26 +3629,33 @@ function renderEditores(){
   document.getElementById('total-editores').textContent=fmtR(calcEditoresTotal());
   document.getElementById('editores-grid').innerHTML=(dadosEditores.editores||[]).map(ed=>{
     const total=calcEdTotal(ed);
-    const vids=ed.projetos.reduce((a,p)=>a+p.qtd,0);
-    const ent=ed.projetos.filter(p=>p.entregue).reduce((a,p)=>a+p.qtd,0);
-    const pct=vids>0?Math.round(ent/vids*100):0;
+    const vids=ed.projetos.reduce((a,p)=>a+p.qtdVideo,0);
+    const cortesQ=ed.projetos.reduce((a,p)=>a+p.qtdCorte,0);
+    const totalUnid=vids+cortesQ;
+    const ent=ed.projetos.filter(p=>p.entregue).reduce((a,p)=>a+p.qtdVideo+p.qtdCorte,0);
+    const pct=totalUnid>0?Math.round(ent/totalUnid*100):0;
     const rows=ed.projetos.length
       ?ed.projetos.map(p=>`<tr>
         <td><input class="proj-nome" value="${escEd(p.nome)}" placeholder="Projeto…"
           onblur="edUpdNome('${ed.id}','${p.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></td>
         <td style="text-align:center"><div class="qtd-wrap">
-          <button class="q-btn" onclick="edChgQtd('${ed.id}','${p.id}',-1)">−</button>
-          <span class="q-num">${p.qtd}</span>
-          <button class="q-btn" onclick="edChgQtd('${ed.id}','${p.id}',1)">+</button>
+          <button class="q-btn" onclick="edChgQtdVideo('${ed.id}','${p.id}',-1)">−</button>
+          <span class="q-num">${p.qtdVideo}</span>
+          <button class="q-btn" onclick="edChgQtdVideo('${ed.id}','${p.id}',1)">+</button>
+        </div></td>
+        <td style="text-align:center"><div class="qtd-wrap">
+          <button class="q-btn" onclick="edChgQtdCorte('${ed.id}','${p.id}',-1)">−</button>
+          <span class="q-num">${p.qtdCorte}</span>
+          <button class="q-btn" onclick="edChgQtdCorte('${ed.id}','${p.id}',1)">+</button>
         </div></td>
         <td style="text-align:center"><label class="tgl">
           <input type="checkbox" ${p.entregue?'checked':''} onchange="edToggle('${ed.id}','${p.id}',this.checked)">
           <span class="tgl-track"></span><span class="tgl-thumb"></span>
         </label></td>
-        <td style="text-align:right;font-size:11px;font-weight:800" class="${p.entregue?'pv-ok':'pv-pend'}">${fmtR(p.qtd*(+ed.rate||0))}</td>
+        <td style="text-align:right;font-size:11px;font-weight:800" class="${p.entregue?'pv-ok':'pv-pend'}">${fmtR(p.qtdVideo*(+ed.rate||0)+p.qtdCorte*(+ed.rateCorte||0))}</td>
         <td><button class="del-btn" onclick="edDelProj('${ed.id}','${p.id}')">✕</button></td>
       </tr>`).join('')
-      :`<tr><td colspan="5" class="empty">Nenhum projeto</td></tr>`;
+      :`<tr><td colspan="6" class="empty">Nenhum projeto</td></tr>`;
     return`<div class="ed-card">
       <div class="ed-card-hd">
         <div style="display:flex;align-items:center;gap:8px;">
@@ -3644,12 +3667,15 @@ function renderEditores(){
           <div class="ed-total-v">${fmtR(total)}</div>
           <div class="ed-total-s">
             <input class="ed-rate-inp" type="number" value="${ed.rate||40}" min="0"
-              onblur="edUpdRate('${ed.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"> R$/vídeo · ${vids} vídeo${vids!==1?'s':''}
+              onblur="edUpdRate('${ed.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"> R$/vídeo ·
+            <input class="ed-rate-inp" type="number" value="${ed.rateCorte||20}" min="0"
+              onblur="edUpdRateCorte('${ed.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"> R$/corte
           </div>
+          <div class="ed-total-s" style="margin-top:2px">${vids} vídeo${vids!==1?'s':''}${cortesQ>0?` + ${cortesQ} corte${cortesQ!==1?'s':''}`:''}</div>
         </div>
       </div>
       <table class="proj-tbl">
-        <thead><tr><th>Projeto</th><th style="text-align:center">Vídeos</th><th style="text-align:center">Entregue</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+        <thead><tr><th>Projeto</th><th style="text-align:center">Vídeos</th><th style="text-align:center">Cortes</th><th style="text-align:center">Entregue</th><th style="text-align:right">Valor</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="ed-add-row">
@@ -3658,10 +3684,10 @@ function renderEditores(){
       <div class="ed-ft">
         <div class="ed-ft-info">
           <span style="color:var(--green);font-size:11px">✓</span>
-          <span>${ent} de ${vids} entregue${ent!==1?'s':''}</span>
+          <span>${ent} de ${totalUnid} entregue${ent!==1?'s':''}</span>
           <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
         </div>
-        <span class="prog-pct" style="color:${pct===100&&vids>0?'var(--green)':pct>0?'var(--accent)':'var(--text3)'}">${pct}%</span>
+        <span class="prog-pct" style="color:${pct===100&&totalUnid>0?'var(--green)':pct>0?'var(--accent)':'var(--text3)'}">${pct}%</span>
       </div>
     </div>`;
   }).join('');
@@ -3669,9 +3695,9 @@ function renderEditores(){
 
 async function edAddProj(edId){
   const ed=dadosEditores.editores.find(e=>e.id===edId);if(!ed)return;
-  const{data,error}=await supa.from('fin_editor_projetos').insert({editor_id:edId,mes_ref:mesRef,nome:'',qtd:1,entregue:false}).select().single();
+  const{data,error}=await supa.from('fin_editor_projetos').insert({editor_id:edId,mes_ref:mesRef,nome:'',qtd_video:1,qtd_corte:0,entregue:false}).select().single();
   if(error){console.error('Erro ao criar projeto:',error);return;}
-  ed.projetos.push({id:data.id,nome:'',qtd:1,entregue:false});
+  ed.projetos.push({id:data.id,nome:'',qtdVideo:1,qtdCorte:0,entregue:false});
   renderEditores();renderHeroDesp();renderResumo();
   setTimeout(()=>{const r=document.querySelectorAll('.proj-nome');r[r.length-1]?.focus();},40);
 }
@@ -3707,10 +3733,22 @@ async function edUpdRate(edId,val){
   await supa.from('fin_editores').update({rate:ed.rate}).eq('id',edId);
   renderEditores();renderHeroDesp();renderResumo();
 }
-async function edChgQtd(edId,pId,d){
+async function edUpdRateCorte(edId,val){
+  const ed=dadosEditores.editores.find(e=>e.id===edId);if(!ed)return;
+  ed.rateCorte=parseFloat(val)||20;
+  await supa.from('fin_editores').update({rate_corte:ed.rateCorte}).eq('id',edId);
+  renderEditores();renderHeroDesp();renderResumo();
+}
+async function edChgQtdVideo(edId,pId,d){
   const p=dadosEditores.editores.find(e=>e.id===edId)?.projetos.find(x=>x.id===pId);if(!p)return;
-  p.qtd=Math.max(0,p.qtd+d);
-  await supa.from('fin_editor_projetos').update({qtd:p.qtd}).eq('id',pId);
+  p.qtdVideo=Math.max(0,p.qtdVideo+d);
+  await supa.from('fin_editor_projetos').update({qtd_video:p.qtdVideo}).eq('id',pId);
+  renderEditores();renderHeroDesp();renderResumo();
+}
+async function edChgQtdCorte(edId,pId,d){
+  const p=dadosEditores.editores.find(e=>e.id===edId)?.projetos.find(x=>x.id===pId);if(!p)return;
+  p.qtdCorte=Math.max(0,p.qtdCorte+d);
+  await supa.from('fin_editor_projetos').update({qtd_corte:p.qtdCorte}).eq('id',pId);
   renderEditores();renderHeroDesp();renderResumo();
 }
 async function edDelEditor(edId){
@@ -3722,9 +3760,9 @@ async function edDelEditor(edId){
 }
 async function addEditorCard(){
   if(!dadosEditores)await carregarEditores();
-  const{data,error}=await supa.from('fin_editores').insert({nome:'Novo editor',rate:40}).select().single();
+  const{data,error}=await supa.from('fin_editores').insert({nome:'Novo editor',rate:40,rate_corte:20}).select().single();
   if(error){console.error('Erro ao criar editor:',error);return;}
-  dadosEditores.editores.push({id:data.id,nome:data.nome,rate:data.rate,projetos:[]});
+  dadosEditores.editores.push({id:data.id,nome:data.nome,rate:data.rate,rateCorte:data.rate_corte,projetos:[]});
   renderEditores();
 }
 
@@ -3916,7 +3954,10 @@ function openModal(tipo){
     </div>
     <div class="mf-row">
       <div class="mf"><label>Dia de vencimento</label><input type="number" id="m-dia" placeholder="Ex: 5" min="1" max="31"></div>
+    </div>
+    <div class="mf-row">
       <div class="mf"><label>Vídeos/mês</label><input type="number" id="m-videos" placeholder="1" min="1" value="1"></div>
+      <div class="mf"><label>Cortes/mês</label><input type="number" id="m-cortes" placeholder="0" min="0" value="0"></div>
     </div>
     <div class="divider"></div>
     <div class="mf-row">
@@ -4093,12 +4134,13 @@ async function salvarModal(){
       const valor=parseVal(document.getElementById('m-valor').value)||0;
       const dia=parseInt(document.getElementById('m-dia').value)||5;
       const videos=parseInt(document.getElementById('m-videos').value)||1;
+      const cortes=parseInt(document.getElementById('m-cortes').value)||0;
       const duracao=parseInt(document.getElementById('m-duracao').value)||null;
       const inicio=document.getElementById('m-inicio').value||mesRef;
       // 1. Insere o cliente base — usa .select() (não .single()) para evitar crash em null
       const{data:clArr,error:clErr}=await supa.from('fin_clientes').insert({
         nome,plano,valor_padrao:valor,dia_vencimento:dia,ativo_padrao:true,
-        videos_mes:videos,duracao_meses:duracao||null,data_inicio:inicio
+        videos_mes:videos,cortes_mes:cortes,duracao_meses:duracao||null,data_inicio:inicio
       }).select();
       if(clErr)throw new Error('Erro ao criar cliente: '+clErr.message);
       const cl=clArr?.[0];
@@ -4146,13 +4188,14 @@ async function salvarModal(){
       const valor=parseVal(document.getElementById('m-valor').value)||0;
       const dia=parseInt(document.getElementById('m-dia').value)||5;
       const videos=parseInt(document.getElementById('m-videos').value)||1;
+      const cortes=parseInt(document.getElementById('m-cortes').value)||0;
       const duracaoNova=parseInt(document.getElementById('m-duracao').value)||null;
       const inicio=document.getElementById('m-inicio').value||mesRef;
       const addMeses=parseInt(document.getElementById('m-add-meses').value)||0;
 
       // Atualiza dados base do cliente
       await supa.from('fin_clientes').update({
-        nome,plano,valor_padrao:valor,dia_vencimento:dia,videos_mes:videos,
+        nome,plano,valor_padrao:valor,dia_vencimento:dia,videos_mes:videos,cortes_mes:cortes,
         duracao_meses:duracaoNova,data_inicio:inicio
       }).eq('id',clienteEditandoId);
 
@@ -4202,6 +4245,7 @@ async function salvarModal(){
       const valor=parseVal(document.getElementById('m-valor').value)||0;
       const dia=parseInt(document.getElementById('m-dia').value)||5;
       const videos=parseInt(document.getElementById('m-videos').value)||1;
+      const cortes=parseInt(document.getElementById('m-cortes').value)||0;
       const duracao=parseInt(document.getElementById('m-duracao').value)||null;
       const inicio=document.getElementById('m-inicio').value;
       if(!inicio){alert('Informe o novo mês de início');btn.textContent='Salvar';return;}
@@ -4209,7 +4253,7 @@ async function salvarModal(){
       // Reabre o contrato com as novas datas/valor — histórico anterior à reativação não é tocado.
       const{error:clErr}=await supa.from('fin_clientes').update({
         encerrado:false,nome,plano,valor_padrao:valor,dia_vencimento:dia,
-        videos_mes:videos,duracao_meses:duracao||null,data_inicio:inicio
+        videos_mes:videos,cortes_mes:cortes,duracao_meses:duracao||null,data_inicio:inicio
       }).eq('id',clienteEditandoId);
       if(clErr)throw new Error('Erro ao reativar cliente: '+clErr.message);
 
@@ -4279,7 +4323,10 @@ function editarCliente(clienteId){
     </div>
     <div class="mf-row">
       <div class="mf"><label>Dia de vencimento</label><input type="number" id="m-dia" value="${c.dia_vencimento}" min="1" max="31"></div>
+    </div>
+    <div class="mf-row">
       <div class="mf"><label>Vídeos/mês</label><input type="number" id="m-videos" value="${c.videos_mes||1}" min="1"></div>
+      <div class="mf"><label>Cortes/mês</label><input type="number" id="m-cortes" value="${c.cortes_mes||0}" min="0"></div>
     </div>
     <div class="divider"></div>
     <div class="mf-row">
