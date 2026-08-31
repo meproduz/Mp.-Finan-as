@@ -1966,7 +1966,7 @@ async function carregar(){
   // Restaura aba ativa salva no localStorage (persiste entre refreshes)
   const _savedTab=localStorage.getItem('mp_active_tab')||'dash';
   goTab(_savedTab);
-  carregarEditores();
+  await carregarEditores();
   renderTudo();
   // Notificações automáticas: dispara apenas 1x por sessão de aba
   // sessionStorage zera ao fechar/reabrir a aba, mas sobrevive a refreshes e troca de abas internas
@@ -3589,28 +3589,27 @@ function renderMargemClientes(){
   document.getElementById('margem-tbody').innerHTML=rows;
 }
 
-// ===== GESTÃO DE EDITORES =====
+// ===== GESTÃO DE EDITORES (Supabase: fin_editores + fin_editor_projetos) =====
 let dadosEditores=null;
-function chaveEditores(){return'mp_edit_'+mesRef;}
-function edUid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
-function edDadosPadrao(){return{editores:[{id:'gabriel',nome:'Gabriel',rate:40,projetos:[]},{id:'allan',nome:'Allan',rate:40,projetos:[]}]};}
-function carregarEditores(){
-  const raw=localStorage.getItem(chaveEditores());
-  if(raw){try{dadosEditores=JSON.parse(raw);}catch{dadosEditores=edDadosPadrao();}}
-  else{
-    const prev=localStorage.getItem('mp_edit_'+addMes(mesRef,-1));
-    if(prev){try{const p=JSON.parse(prev);dadosEditores={editores:p.editores.map(e=>({...e,projetos:[]}))};}catch{dadosEditores=edDadosPadrao();}}
-    else dadosEditores=edDadosPadrao();
+async function carregarEditores(){
+  let{data:eds,error:edErr}=await supa.from('fin_editores').select('*').order('created_at');
+  if(edErr){console.error('Erro ao carregar editores:',edErr);dadosEditores={editores:[]};return;}
+  if(!eds||eds.length===0){
+    const{data:novos}=await supa.from('fin_editores').insert([{nome:'Gabriel',rate:40},{nome:'Allan',rate:40}]).select();
+    eds=novos||[];
   }
-  salvarEditores();
+  const{data:projs}=await supa.from('fin_editor_projetos').select('*').eq('mes_ref',mesRef);
+  dadosEditores={editores:eds.map(ed=>({
+    id:ed.id,nome:ed.nome,rate:ed.rate,
+    projetos:(projs||[]).filter(p=>p.editor_id===ed.id).map(p=>({id:p.id,nome:p.nome||'',qtd:p.qtd,entregue:p.entregue}))
+  }))};
 }
-function salvarEditores(){if(dadosEditores)localStorage.setItem(chaveEditores(),JSON.stringify(dadosEditores));}
 function calcEdTotal(ed){return ed.projetos.reduce((a,p)=>a+p.qtd*(+ed.rate||0),0);}
 function calcEditoresTotal(){return(dadosEditores?.editores||[]).reduce((a,ed)=>a+calcEdTotal(ed),0);}
 function escEd(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
 function renderEditores(){
-  if(!dadosEditores)carregarEditores();
+  if(!dadosEditores)return;
   document.getElementById('total-editores').textContent=fmtR(calcEditoresTotal());
   document.getElementById('editores-grid').innerHTML=(dadosEditores.editores||[]).map(ed=>{
     const total=calcEdTotal(ed);
@@ -3668,47 +3667,65 @@ function renderEditores(){
   }).join('');
 }
 
-function edAddProj(edId){
+async function edAddProj(edId){
   const ed=dadosEditores.editores.find(e=>e.id===edId);if(!ed)return;
-  ed.projetos.push({id:edUid(),nome:'',qtd:1,entregue:false});
-  salvarEditores();renderEditores();renderHeroDesp();renderResumo();
+  const{data,error}=await supa.from('fin_editor_projetos').insert({editor_id:edId,mes_ref:mesRef,nome:'',qtd:1,entregue:false}).select().single();
+  if(error){console.error('Erro ao criar projeto:',error);return;}
+  ed.projetos.push({id:data.id,nome:'',qtd:1,entregue:false});
+  renderEditores();renderHeroDesp();renderResumo();
   setTimeout(()=>{const r=document.querySelectorAll('.proj-nome');r[r.length-1]?.focus();},40);
 }
-function edDelProj(edId,pId){
+async function edDelProj(edId,pId){
   const ed=dadosEditores.editores.find(e=>e.id===edId);if(!ed)return;
+  await supa.from('fin_editor_projetos').delete().eq('id',pId);
   ed.projetos=ed.projetos.filter(p=>p.id!==pId);
-  salvarEditores();renderEditores();renderHeroDesp();renderResumo();
+  renderEditores();renderHeroDesp();renderResumo();
 }
-function edToggle(edId,pId,val){
+async function edToggle(edId,pId,val){
   const p=dadosEditores.editores.find(e=>e.id===edId)?.projetos.find(x=>x.id===pId);
-  if(p){p.entregue=val;salvarEditores();renderEditores();}
+  if(!p)return;
+  p.entregue=val;
+  await supa.from('fin_editor_projetos').update({entregue:val}).eq('id',pId);
+  renderEditores();
 }
-function edUpdNome(edId,pId,val){
+async function edUpdNome(edId,pId,val){
   const p=dadosEditores.editores.find(e=>e.id===edId)?.projetos.find(x=>x.id===pId);
-  if(p){p.nome=val.trim();salvarEditores();}
+  if(!p)return;
+  p.nome=val.trim();
+  await supa.from('fin_editor_projetos').update({nome:p.nome}).eq('id',pId);
 }
-function edUpdEdNome(edId,val){
+async function edUpdEdNome(edId,val){
   const ed=dadosEditores.editores.find(e=>e.id===edId);
-  if(ed){ed.nome=val.trim()||ed.nome;salvarEditores();renderEditores();}
+  if(!ed)return;
+  ed.nome=val.trim()||ed.nome;
+  await supa.from('fin_editores').update({nome:ed.nome}).eq('id',edId);
+  renderEditores();
 }
-function edUpdRate(edId,val){
+async function edUpdRate(edId,val){
   const ed=dadosEditores.editores.find(e=>e.id===edId);if(!ed)return;
-  ed.rate=parseFloat(val)||40;salvarEditores();renderEditores();renderHeroDesp();renderResumo();
+  ed.rate=parseFloat(val)||40;
+  await supa.from('fin_editores').update({rate:ed.rate}).eq('id',edId);
+  renderEditores();renderHeroDesp();renderResumo();
 }
-function edChgQtd(edId,pId,d){
+async function edChgQtd(edId,pId,d){
   const p=dadosEditores.editores.find(e=>e.id===edId)?.projetos.find(x=>x.id===pId);if(!p)return;
-  p.qtd=Math.max(0,p.qtd+d);salvarEditores();renderEditores();renderHeroDesp();renderResumo();
+  p.qtd=Math.max(0,p.qtd+d);
+  await supa.from('fin_editor_projetos').update({qtd:p.qtd}).eq('id',pId);
+  renderEditores();renderHeroDesp();renderResumo();
 }
-function edDelEditor(edId){
+async function edDelEditor(edId){
   const ed=dadosEditores.editores.find(e=>e.id===edId);if(!ed)return;
   if(!confirm(`Apagar "${ed.nome}"?`))return;
+  await supa.from('fin_editores').delete().eq('id',edId);
   dadosEditores.editores=dadosEditores.editores.filter(e=>e.id!==edId);
-  salvarEditores();renderEditores();renderHeroDesp();renderResumo();
+  renderEditores();renderHeroDesp();renderResumo();
 }
-function addEditorCard(){
-  if(!dadosEditores)carregarEditores();
-  dadosEditores.editores.push({id:edUid(),nome:'Novo editor',rate:40,projetos:[]});
-  salvarEditores();renderEditores();
+async function addEditorCard(){
+  if(!dadosEditores)await carregarEditores();
+  const{data,error}=await supa.from('fin_editores').insert({nome:'Novo editor',rate:40}).select().single();
+  if(error){console.error('Erro ao criar editor:',error);return;}
+  dadosEditores.editores.push({id:data.id,nome:data.nome,rate:data.rate,projetos:[]});
+  renderEditores();
 }
 
 // AÇÕES
